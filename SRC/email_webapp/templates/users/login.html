@@ -1,0 +1,43 @@
+{% extends "layout/_base.html" %}
+{% block title %}Login{% endblock %}
+{% block style %}
+    {% load static %}
+    <link href="{% static "users/form1.css" %}" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: mediumturquoise;
+        }
+
+        .info {
+            background-color: darkslategrey;
+            color: violet;
+
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <center>
+        <br>
+
+        {% if messages %}
+            {% for message in messages %}
+                <h5 class="info">{{ message }}</h5>
+            {% endfor %}
+        {% endif %}
+        <br>
+        <div class="loginBox">
+            <h2>Login</h2>
+            <form action="" method="post">
+                {% csrf_token %}
+                <p>Username</p>
+                <input name="username" placeholder="sample@gmz.com">
+                <p>Password</p>
+                <input name="password" type="password">
+                <input type="submit" value="Login">
+                <p>Forget password? <a href="/accounts/recover-link/">Recover</a></p>
+                <p>Don't have an account? <a href="/accounts/register/">Sign Up</a></p>
+            </form>
+        </div>
+    </center>
+
+{% endblock %}
