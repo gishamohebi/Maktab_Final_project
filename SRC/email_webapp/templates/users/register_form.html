@@ -1,0 +1,88 @@
+{% extends "layout/_base.html" %}
+{% block title %}Registering{% endblock %}
+{% block style %}
+    {% load static %}
+    <link href="{% static "users/form1.css" %}" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: cornflowerblue;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+
+    <center>
+        <br>
+        <div class="loginBox">
+            <h2>Registering</h2>
+            <form action="" method="post">
+                {% csrf_token %}
+                <p>Username</p>
+                <div name="fname">{{ form.username }}</div>
+                <p>Password</p>
+                <div name="pword1">
+                    {{ form.password }}
+                </div>
+                <p>First</p>
+                <div name="fname">{{ form.first_name }}</div>
+                <p>Last Name</p>
+                <div name="lname">{{ form.last_name }}</div>
+                <p>Birth Date</p>
+                <input type="date" name="birth_date">
+                <br>
+
+                <p>Recovery Option</p>
+                <br>
+                <select id="recovery" name="recovery">
+                    <option>Options</option>
+                    <option value="Phone">Phone</option>
+                    <option value="Email">Email</option>
+                </select>
+                <br>
+                <br>
+                <p>E-mail Address</p>
+                <input type="email" name="email_address" disabled="disabled" id="Email">
+                <p>Phone</p>
+                <input type="text" name="phone" disabled="disabled" id="Phone">
+                <input type="Submit" name="sbmt" value="Save">
+                <p>Already have an account? <a href="/accounts/login/">Sign In</a></p>
+                <br>
+                <br>
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            </form>
+        </div>
+    </center>
+    <script type="text/javascript">
+        $(function () {
+            $("#recovery").change(function () {
+                if ($(this).val() == "Phone") {
+                    $("#Phone").removeAttr("disabled");
+                    $("#Phone").attr("required", "required");
+                    $("#Email").val("")
+                    $("#Email").attr("disabled", "disabled");
+                    $("#Phone").focus();
+                }
+            });
+        });
+        $(function () {
+            $("#recovery").change(function () {
+                if ($(this).val() == "Email") {
+                    $("#Email").removeAttr("disabled");
+                    $("#Email").attr("required", "required");
+                    $("#Phone").attr("disabled", "disabled");
+                    $("#Phone").val("")
+                    $("#Email").focus();
+                }
+            });
+        });
+    </script>
+{% endblock %}
+

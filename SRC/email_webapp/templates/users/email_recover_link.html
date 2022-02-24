@@ -1,0 +1,7 @@
+{% autoescape off %}
+    Hi {{ user.username }},
+
+    Please click on the link below to recover your password:
+
+    http://{{ domain }}{% url 'recover' uidb64=uid %}
+{% endautoescape %}

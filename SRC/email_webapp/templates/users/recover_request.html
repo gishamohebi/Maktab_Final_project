@@ -1,0 +1,44 @@
+{% extends "layout/_base.html" %}
+{% block title %}Home{% endblock %}
+{% block style %}
+    {% load static %}
+    <link href="{% static "users/form1.css" %}" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: cornflowerblue;
+        }
+
+
+        .info {
+            background-color: darkslategrey;
+            color: violet;
+
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <center>
+        <br>
+        <br>
+        <form method="post">
+            {% csrf_token %}
+            <div class="loginBox">
+                <br>
+                <p><b>Username</b></p>
+                <br>
+                <input name="username">
+                <input type="submit" value="recover">
+            </div>
+            <br>
+            <br>
+            <br>
+            {% if messages %}
+                {% for message in messages %}
+                    <h5 class="info">{{ message }}</h5>
+                {% endfor %}
+            {% endif %}
+        </form>
+
+    </center>
+
+{% endblock %}
