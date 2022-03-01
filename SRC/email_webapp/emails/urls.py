@@ -9,5 +9,7 @@ urlpatterns = [
     path("contacts/", ContactList.as_view(), name="contacts"),
     path("new-email/", new_email, name="new_email"),
     path("new-contact/", new_contact, name="new_email"),
+    path('email-detail/<int:pk>', EmailDetail.as_view(), name="email_detail"),
+    path("contact-detail/<int:pk>/", ContactDetail.as_view(), name="contact_detail")
 
 ]

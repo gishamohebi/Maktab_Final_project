@@ -12,9 +12,9 @@ section {
 }
 
 .header {
-    padding-top: 10px;
+    padding-top: 8px;
     background-color: #DC143C;
-    width: 800px;
+    width: 500px;
     height: 50px;
     font-family: "Times New Roman";
     border-radius: 5px;
@@ -46,9 +46,9 @@ body {
 }
 
 nav {
-    padding-top: 110px;
+    padding-top: 2rem;
     padding-left: 15px;
-    position: absolute;
+    position: fixed;
     float: left;
     top: 0;
     left: 0;
@@ -69,7 +69,7 @@ nav ul a {
 nav ul li {
     position: relative;
     width: 70px;
-    height: 50px;
+    height:40px;
     cursor: pointer;
     background: crimson;
     text-transform: uppercase;

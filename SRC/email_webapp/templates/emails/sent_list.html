@@ -15,13 +15,16 @@
         <br>
         <ol>
             {% if object_list %}
-                {% for email in object_list %}
-                    <li class="">
-                        <a href="/gmz-email/email-detail/{{ email.id }}">
-                            {#                            todo : receiver.name#}
-                            {{ email.receiver }} : {{ email.title }} - {{ email.pub_date }}
-                        </a>
-                    </li>
+                {% for email in emails %}
+                    {% for receiver in receivers %}
+                        <li class="">
+                            <a href="/gmz-email/email-detail/{{ email.id }}">
+                                {#                            todo : receiver.name#}
+                                {{ receiver }} : {{ email.title }} - {{ email.pub_date }}
+                            </a>
+                        </li>
+                    {% endfor %}
+
                 {% endfor %}
             {% endif %}
 

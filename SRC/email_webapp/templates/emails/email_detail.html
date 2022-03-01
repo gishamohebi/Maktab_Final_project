@@ -1,0 +1,50 @@
+{% extends "layout/_base.html" %}
+{% block title %}Inbox{% endblock %}
+{% block style %}
+    {% load static %}
+    <link href="{% static "emails/sidebarr.css" %}" rel="stylesheet"/>
+    <link href="{% static "emails/listing.css" %}" rel="stylesheet"/>
+{% endblock %}
+{% block body %}
+    <center>
+        <div class="header">
+            <h4>
+                {{ user.username }}
+            </h4>
+        </div>
+        <div class="card border border-danger"
+             style="width: 40rem;height:auto;background-color: bisque;
+             color: black; margin-top: 5rem ;" ;>
+            <br>
+            <h4><strong>Title : {{ email.title }}</strong></h4>
+            <div style="margin-left: -150px">
+                <br>
+
+                <p>from : {{ email.sender }}</p>
+                {% if people %}
+                    <p>to : {{ people|join:"," }}</p>
+                {% endif %}
+                {% if person %}
+                    <p>to : {{ person }}</p>
+                {% endif %}
+            </div>
+            <h5>
+                {{ email.text }}
+
+            </h5>
+            <br>
+            {% if email.signature %}
+                {{ email.signature }}
+            {% endif %}
+            <p>
+                {{ email.pub_date }}
+            </p>
+
+        </div>
+        <br>
+        {% include "emails/new_email.html" %}
+        {% include "emails/new_contact.html" %}
+    </center>
+
+    {% include "layout/_sidebar.html" %}
+{% endblock %}
