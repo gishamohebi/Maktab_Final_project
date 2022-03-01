@@ -20,7 +20,7 @@ def valid_contact(email_address):
     """
     result = re.search('@gmz.com$', email_address)
     if result is None:
-        raise ValidationError('The user name need the domain')
+        raise ValidationError('The user email need the domain @gmz.com')
 
 
 def valid_email(email):

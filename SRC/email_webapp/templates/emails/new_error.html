@@ -1,0 +1,22 @@
+{% extends "layout/_base.html" %}
+{% block title %}Inbox{% endblock %}
+{% block style %}
+    {% load static %}
+    <link href="{% static "emails/sidebarr.css" %}" rel="stylesheet"/>
+    <link href="{% static "emails/listing.css" %}" rel="stylesheet"/>
+{% endblock %}
+{% block body %}
+    <center>
+        <br>
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ field }} : {{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+    {{ message }}
+    </center>
+{% endblock %}

@@ -2,8 +2,9 @@
 {% block title %}Home{% endblock %}
 {% block style %}
     {% load static %}
-    <link href="{% static "users/form1.css" %}" rel="stylesheet"/>
     <link href="{% static "users/click.css" %}" rel="stylesheet"/>
+    <link href="{% static "users/home1.css" %}" rel="stylesheet"/>
+
     <style>
         body {
             background-color: violet;
@@ -14,21 +15,27 @@
 {% block body %}
     <br>
     <br>
+
     <center>
-        <h3>Welcome please select one</h3>
-        <div class="loginBox">
+        <div class=" loginBox">
             <br>
+            <h2>
+                Welcome to @gmz.com
+            </h2>
+            <br>
+            <h4>
+                if you have an account :
+            </h4>
             <button class="button-63">
-                <a href="/accounts/register/" style="color: white">Register</a>
+                <a href="/accounts/login/">Login</a>
             </button>
-
             <br>
-            <br>
-
+            <h4>
+                if don't :
+            </h4>
             <button class="button-63">
-                <a href="/accounts/login/" style="color: white">Login</a>
+                <a href="/accounts/register/">Register</a>
             </button>
-
         </div>
         {{ message }}
     </center>

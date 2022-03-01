@@ -1,6 +1,7 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -18,7 +19,13 @@ from .forms import *
 import random
 
 
+# from django.contrib.auth.decorators import
+
+
 def home(request):
+    # todo: make a template to error when they are login
+    # if request.user.is_authenticated:
+    #     return HttpResponse("No")
     return render(request, "users/home.html")
 
 
@@ -51,50 +58,54 @@ class Register(View):
         form.phone = request.POST.get("phone")
         form.recovery = request.POST.get("recovery")
         form.birth_date = request.POST.get("birth_date")
-        if form.is_valid():
+        try:
+            if form.is_valid():
 
-            try:
-                user = form.save(commit=False)  # Do not save to table yet
-                user.username += "@gmz.com"
-                validate_password(form.cleaned_data['password'], user)
-            except ValidationError as e:
-                form.add_error('password', e)  # to be displayed with the field's errors
-                return render(request, "users/register_form.html", {'form': form})
-            # except IntegrityError:
-            #     form.add_error('username', "This username exist")
-            #     return render(request, "users/register_form.html", {"form": form})
+                try:
+                    user = form.save(commit=False)  # Do not save to table yet
+                    user.username += "@gmz.com"
+                    validate_password(form.cleaned_data['password'], user)
+                except ValidationError as e:
+                    form.add_error('password', e)  # to be displayed with the field's errors
+                    return render(request, "users/register_form.html", {'form': form})
 
-            if form.email_address is not None:
-                form.save()
-                send_validation_email(request, user)
-                messages.add_message(
-                    request, messages.SUCCESS,
-                    'We sent you an email to verify your account')
-                return HttpResponseRedirect("/accounts/login/")
-            if form.phone is not None:
-                request.session['registration_info'] = {
-                    'username': form.cleaned_data['username'] + "@gmz.com",
-                    'phone': form.cleaned_data['phone'],
-                    'email': form.cleaned_data['email_address'],
-                    'first_name': form.cleaned_data['first_name'],
-                    'last_name': form.cleaned_data['last_name'],
-                    'birth_date': form.cleaned_data['birth_date'],
-                    'password': form.cleaned_data['password'],
-                    'recovery': form.cleaned_data['recovery']
-                }
+                if form.email_address is not None:
+                    form.save()
+                    send_validation_email(request, user)
+                    messages.add_message(
+                        request, messages.SUCCESS,
+                        'We sent you an email to verify your account')
+                    return HttpResponseRedirect("/accounts/login/")
+                if form.phone is not None:
+                    request.session['registration_info'] = {
+                        'username': form.cleaned_data['username'] + "@gmz.com",
+                        'phone': form.cleaned_data['phone'],
+                        'email': form.cleaned_data['email_address'],
+                        'first_name': form.cleaned_data['first_name'],
+                        'last_name': form.cleaned_data['last_name'],
+                        'birth_date': form.cleaned_data['birth_date'],
+                        'password': form.cleaned_data['password'],
+                        'recovery': form.cleaned_data['recovery']
+                    }
 
-                random_code = random.randint(1000, 9999)
-                send_otp_code(user.phone, random_code)
-                OtpCode.objects.create(phone_number=form.cleaned_data['phone'], code=random_code)
-                messages.add_message(request, messages.INFO,
-                                     "We sent your phone a verify code,enter it please")
-                return redirect(f"/accounts/phone/activate/")
-
-        return render(request, "users/register_form.html", {"form": form})
+                    random_code = random.randint(1000, 9999)
+                    send_otp_code(user.phone, random_code)
+                    OtpCode.objects.create(phone_number=form.cleaned_data['phone'], code=random_code)
+                    messages.add_message(request, messages.INFO,
+                                         "We sent your phone a verify code,enter it please")
+                    return redirect(f"/accounts/phone/activate/")
+        except IntegrityError:
+            form.add_error('username', "This username exist")
+            return render(request, "users/register_form.html", {"form": form})
+        else:
+            return render(request, "users/register_form.html", {"form": form})
 
 
 class Login(View):
     def get(self, request):
+        # todo: make a template to error when they are login
+        # if request.user.is_authenticated:
+        #     return HttpResponse("Your already log in")
         return render(request, "users/login.html")
 
     def post(self, request):
@@ -110,12 +121,18 @@ class Login(View):
                         'Email is not verified, please check your email inbox')
                     return redirect("login")
             login(request, user)
-            return HttpResponse(f"Log in ! Wellcome ")
+            return HttpResponseRedirect("/gmz-email/inbox/")
 
         messages.add_message(
             request, messages.ERROR,
             'wrong username or password')
         return redirect("login")
+
+
+def logout_view(request):
+    if request.method == 'GET':
+        logout(request)
+        return redirect("/accounts/login/")
 
 
 class ActivateEmail(View):

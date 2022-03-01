@@ -1,0 +1,36 @@
+<div id="newemailModal" class="modal" role="dialog"
+     style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<form method="post"
+      style="width: 500px;height: auto;background-color: cornflowerblue"
+      action="/gmz-email/new-email/"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <center>
+        <div style="display: flex;flex-direction: column">
+            <p>New email</p>
+            {{ form1.as_p }}
+            <label>Signature</label>
+            <select name="signature">
+                <option value="None">None</option>
+                {% for sign in signatures %}
+
+                    <option value="{{ sign }}">{{ sign }}</option>
+                {% endfor %}
+
+            </select>
+            {#            <label>receiver</label>#}
+            {#            <input name="receiver_to" type="email" width="100px" placeholder="to : ">#}
+            {#            <input name="receiver_cc" type="text" width="100px" placeholder="cc : ">#}
+            {#            <input name="receiver_bcc" type="text" width="100px" placeholder="bcc : ">#}
+            {#            <label>subject</label>#}
+            {#            {{ form1.title }}#}
+            {#            <label>text</label>#}
+            {#            {{ form1.text }}#}
+            {#            <label>File</label>#}
+            {#            {{ form1.file }}#}
+        </div>
+    </center>
+    <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+    <input type="submit" class="btn btn-outline-secondary" name="draft_submit" value="close">
+</form>
+</div>
