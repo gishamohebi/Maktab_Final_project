@@ -1,0 +1,55 @@
+{% extends "layout/_base.html" %}
+{% block title %}Inbox{% endblock %}
+{% block style %}
+    {% load static %}
+    <link href="{% static "emails/sidebarr.css" %}" rel="stylesheet"/>
+    <link href="{% static "emails/listing.css" %}" rel="stylesheet"/>
+    <style>
+        label {
+            color: deeppink;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <center>
+        <div class="header">
+            <h4>
+                {{ user.username }}
+            </h4>
+        </div>
+        <div class="card border border-danger"
+             style="width: 40rem;height:auto;background-color: bisque;
+             color: black; margin-top: 5rem ;" ;>
+            <form method="post">
+                {% csrf_token %}
+                <br>
+                 <h4>Edit Contact</h4>
+                <br>
+                <br>
+
+                <label>name:</label>
+                <p>{{ form.name }}</p>
+                <label>email:</label>
+                <p>{{ form.email }}</p>
+                <label>emails:</label>
+                <p> {{ form.emails }}</p>
+                <label>phone:</label>
+                <p>{{ form.phone }}</p>
+                <label>birth date</label>
+                <p><input value="date" name="birth_date" type="date"></p>
+                </p>
+
+                <br>
+                <br>
+                <input type="submit" value="update">
+                <br>
+                <br>
+            </form>
+        </div>
+        <br>
+        {% include "emails/new_email.html" %}
+        {% include "users/new_contact.html" %}
+    </center>
+
+    {% include "layout/_sidebar.html" %}
+{% endblock %}

@@ -1,4 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
@@ -13,13 +15,13 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.template.loader import render_to_string
+from django.views.generic import DetailView, UpdateView, ListView
+
 from .tokens import account_activation_token
 from utils import send_otp_code, send_recover_link
 from .forms import *
+from emails.forms import *
 import random
-
-
-# from django.contrib.auth.decorators import
 
 
 def home(request):
@@ -129,6 +131,7 @@ class Login(View):
         return redirect("login")
 
 
+@login_required(redirect_field_name='login')
 def logout_view(request):
     if request.method == 'GET':
         logout(request)
@@ -254,3 +257,130 @@ class NewPassword(View):
             user.save()
             messages.add_message(request, messages.SUCCESS, "your password changed successfully")
             return redirect("login")
+
+
+class ContactList(LoginRequiredMixin, ListView):
+    login_url = '/accounts/login/'
+    # todo: set  permission_denied_message
+    # permission_denied_message = "Login First"
+    model = Contacts
+    template_name = 'users/contact_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ContactList, self).get_context_data(**kwargs)
+        context['form1'] = NewEmailForm()
+        context['form2'] = NewContact()
+        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
+        context['signatures'] = signatures
+        return context
+
+    def get_queryset(self):
+        return Contacts.objects.filter(owner=self.request.user.pk)
+
+
+class ContactDetail(LoginRequiredMixin, DetailView):
+    model = Contacts
+    template_name = 'users/contact_detail.html'
+    context_object_name = 'contact'
+
+    def get_context_data(self, **kwargs):
+        context = super(ContactDetail, self).get_context_data(**kwargs)
+        context['form1'] = NewEmailForm()
+        context['form2'] = NewContact()
+        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
+        context['signatures'] = signatures
+        return context
+
+
+@login_required(redirect_field_name='login')
+def new_contact(request):
+    if request.method == "POST":
+        form = NewContact(request.POST)
+        form.birth_date = request.POST.get("birth_date")
+        try:
+            if form.is_valid():
+                contact = form.save(commit=False)
+                contact.owner = User.objects.get(pk=request.user.pk)
+
+                try:
+                    user = User.objects.get(username=contact.email)
+                except ObjectDoesNotExist:
+                    form.add_error('email', "this email dose not exist in the site")
+                    return render(request, 'emails/new_error.html', {'form': form})
+
+                if user:
+                    contact.save()
+                    return redirect('contacts')
+        except IntegrityError:
+            form.add_error('email', "You saved this contact once")
+            return render(request, 'emails/new_error.html', {'form': form})
+        else:
+            return render(request, 'emails/new_error.html', {'form': form})
+
+
+class UpdateContact(LoginRequiredMixin, UpdateView):
+    model = Contacts
+    context_object_name = 'contact'
+    fields = ['name', 'email', 'birth_date', 'emails', 'phone']
+    template_name = 'users/edit_contact.html'
+
+    def get_success_url(self):
+        self.success_url = f"/accounts/contact-detail/{self.object.pk}/"
+        return self.success_url
+
+    def get_context_data(self, **kwargs):
+        context = super(UpdateContact, self).get_context_data(**kwargs)
+        context['form1'] = NewEmailForm()
+        context['form2'] = NewContact()
+        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
+        context['signatures'] = signatures
+        return context
+
+
+@login_required(redirect_field_name='login')
+def delete_contact(request, pk):
+    if request.method == 'GET':
+        contact = Contacts.objects.get(pk=pk)
+        contact.delete()
+        return redirect('contacts')
+
+
+@login_required(redirect_field_name='login')
+def email_contact(request, email):
+    if request.method == "POST":
+        sender = User.objects.get(pk=request.user.pk)
+        form = NewEmailForm(request.POST, request.FILES)
+        if request.POST.get('signature') != 'None':
+            signature = Signature.objects.get(owner_id=sender.pk,
+                                              text=request.POST.get('signature')).pk
+        else:
+            signature = None
+        if 'email_submit' in request.POST:
+            if form.is_valid():
+                print(email)
+                receiver = User.objects.get(username=email)
+                print(receiver)
+                email = Emails.objects.create(sender=sender,
+                                              title=form.cleaned_data['title'],
+                                              text=form.cleaned_data['text'],
+                                              file=form.cleaned_data['file'],
+                                              status='send',
+                                              is_to=True,
+                                              signature_id=signature
+                                              )
+                email.receiver.add(receiver)
+                email.save()
+                return redirect('sent')
+            return render(request, 'emails/new_error.html', {'form': form})
+
+        if 'draft_submit' in request.POST:
+            if form.is_valid() is False or form.is_valid() is True:
+                email = Emails.objects.create(sender=sender,
+                                              title=form.cleaned_data['title'],
+                                              text=form.cleaned_data['text'],
+                                              file=form.cleaned_data['file'],
+                                              status='draft',
+                                              signature_id=signature
+                                              )
+                email.save()
+                return redirect('draft')

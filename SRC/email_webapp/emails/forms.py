@@ -19,12 +19,3 @@ class NewEmailForm(forms.Form):
     )
 
 
-class NewContact(forms.ModelForm):
-    class Meta:
-        model = Contacts
-        fields = [
-            'email',
-            'name',
-            'emails',
-            'phone'
-        ]

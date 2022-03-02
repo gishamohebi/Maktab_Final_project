@@ -9,21 +9,21 @@
     <center>
         <div class="header">
             <h4>
-                {{ user.username }}
+                Sent
             </h4>
         </div>
         <br>
         <ol>
             {% if object_list %}
                 {% for email in emails %}
-                    {% for receiver in receivers %}
-                        <li class="">
-                            <a href="/gmz-email/email-detail/{{ email.id }}">
-                                {#                            todo : receiver.name#}
-                                {{ receiver }} : {{ email.title }} - {{ email.pub_date }}
-                            </a>
-                        </li>
-                    {% endfor %}
+
+                    <li class="">
+                        <a href="/gmz-email/email-detail/{{ email.id }}">
+                            {#                            todo : receiver.name#}
+                            {{ email.title }} : {{ email.pub_date }}
+                        </a>
+                    </li>
+
 
                 {% endfor %}
             {% endif %}
@@ -31,7 +31,7 @@
         </ol>
 
         {% include "emails/new_email.html" %}
-        {% include "emails/new_contact.html" %}
+        {% include "users/new_contact.html" %}
     </center>
     {% include "layout/_sidebar.html" %}
 {% endblock %}

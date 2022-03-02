@@ -24,3 +24,14 @@ class RegisterForm(forms.ModelForm):
             user.save()
         return user
 
+
+class NewContact(forms.ModelForm):
+    class Meta:
+        model = Contacts
+        fields = [
+            'email',
+            'name',
+            'emails',
+            'phone',
+            'birth_date'
+        ]

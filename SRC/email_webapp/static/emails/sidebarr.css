@@ -69,7 +69,7 @@ nav ul a {
 nav ul li {
     position: relative;
     width: 70px;
-    height:40px;
+    height: 40px;
     cursor: pointer;
     background: crimson;
     text-transform: uppercase;
@@ -147,6 +147,11 @@ nav ul li:after {
 
 .li7:nth-child(1):after {
     content: "Logout";
+    line-height: 50px;
+}
+
+.li9:nth-child(1):after {
+    content: "archive";
     line-height: 50px;
 }
 

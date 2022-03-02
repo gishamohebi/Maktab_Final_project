@@ -6,10 +6,10 @@ urlpatterns = [
     path("sent/", SentList.as_view(), name="sent"),
     path("draft/", DraftList.as_view(), name="draft"),
     path("trash/", TrashList.as_view(), name="trash"),
-    path("contacts/", ContactList.as_view(), name="contacts"),
+    path("archive/", ArchiveList.as_view(), name="archive"),
     path("new-email/", new_email, name="new_email"),
-    path("new-contact/", new_contact, name="new_email"),
     path('email-detail/<int:pk>', EmailDetail.as_view(), name="email_detail"),
-    path("contact-detail/<int:pk>/", ContactDetail.as_view(), name="contact_detail")
+    path('add-archive/<int:pk>/', add_archive, name="add_archive"),
+    path('add-trash/<int:pk>/', add_trash, name="add_trash"),
 
 ]
