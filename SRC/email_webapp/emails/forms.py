@@ -17,5 +17,3 @@ class NewEmailForm(forms.Form):
         validators=[file_size],
         required=False
     )
-
-

@@ -19,8 +19,10 @@ from django.views.generic import DetailView, UpdateView, ListView
 
 from .tokens import account_activation_token
 from utils import send_otp_code, send_recover_link
-from .forms import *
 from emails.forms import *
+from emails.views import BaseList
+from .forms import *
+
 import random
 
 
@@ -259,20 +261,9 @@ class NewPassword(View):
             return redirect("login")
 
 
-class ContactList(LoginRequiredMixin, ListView):
-    login_url = '/accounts/login/'
-    # todo: set  permission_denied_message
-    # permission_denied_message = "Login First"
+class ContactList(BaseList):
     model = Contacts
     template_name = 'users/contact_list.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(ContactList, self).get_context_data(**kwargs)
-        context['form1'] = NewEmailForm()
-        context['form2'] = NewContact()
-        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
-        context['signatures'] = signatures
-        return context
 
     def get_queryset(self):
         return Contacts.objects.filter(owner=self.request.user.pk)

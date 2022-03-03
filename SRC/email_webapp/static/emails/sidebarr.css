@@ -140,10 +140,7 @@ nav ul li:after {
     line-height: 50px;
 }
 
-.li6:nth-child(1):after {
-    content: "Starred";
-    line-height: 50px;
-}
+
 
 .li7:nth-child(1):after {
     content: "Logout";

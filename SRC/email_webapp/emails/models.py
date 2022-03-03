@@ -7,18 +7,31 @@ from django.contrib.auth.models import AbstractUser
 # Create your models here.
 
 class Category(models.Model):
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False
+    )
+
     title = models.CharField(
         max_length=50,
         blank=True,
         null=True
     )
 
+    class Meta:
+        unique_together = ["owner", "title"]
+
+    def __str__(self):
+        return self.title
+
 
 class Signature(models.Model):
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        null=True,
+        null=False,
         blank=False
     )
     text = models.TextField(
@@ -70,9 +83,7 @@ class Emails(models.Model):
     )
     status_choice = [
         ("send", "send"),
-        ("inbox", "inbox"),
         ("draft", "draft"),
-        ("trash", "trash"),
 
     ]
     status = models.CharField(
@@ -82,6 +93,7 @@ class Emails(models.Model):
         blank=False,
         default=None
     )
+    is_trash = models.BooleanField(default=False)
     is_archive = models.BooleanField(default=False)
     is_cc = models.BooleanField(default=False)
     is_bcc = models.BooleanField(default=False)

@@ -12,7 +12,7 @@
                 Sent
             </h4>
         </div>
-        <br>
+        {% include "layout/_labels.html" %}
         <ol>
             {% if object_list %}
                 {% for email in emails %}

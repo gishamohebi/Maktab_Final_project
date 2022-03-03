@@ -1,33 +1,31 @@
 {% extends "layout/_base.html" %}
-{% block title %}Draft{% endblock %}
+{% block title %}Inbox{% endblock %}
 {% block style %}
     {% load static %}
-
     <link href="{% static "emails/sidebarr.css" %}" rel="stylesheet"/>
     <link href="{% static "emails/listing.css" %}" rel="stylesheet"/>
 {% endblock %}
 {% block body %}
     <center>
         <div class="header">
+
             <h4>
-                Drafts
+                Inbox
             </h4>
         </div>
         {% include "layout/_labels.html" %}
         <ol>
-            {% if object_list %}
-                {% for email in object_list %}
-                    <li class="">
-                        <a href="/gmz-email/email-detail/{{ email.id }}">
-                            Draft : {{ email.title }} - {{ email.pub_date }}
-                        </a>
-                    </li>
-                {% endfor %}
-            {% endif %}
-
+            {% for email in object_list %}
+                <li class="">
+                    <a href="/gmz-email/email-detail/{{ email.id }}">
+                        {{ email.sender }} : {{ email.title }} - {{ email.pub_date }}
+                    </a>
+                </li>
+            {% endfor %}
         </ol>
         {% include "emails/new_email.html" %}
         {% include "users/new_contact.html" %}
     </center>
+
     {% include "layout/_sidebar.html" %}
 {% endblock %}

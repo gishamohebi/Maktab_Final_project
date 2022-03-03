@@ -1,4 +1,6 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import IntegrityError
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
@@ -9,114 +11,76 @@ from accounts.forms import NewContact
 from accounts.models import *
 
 
-class InboxList(LoginRequiredMixin, ListView):
+class BaseList(LoginRequiredMixin, ListView):
     login_url = '/accounts/login/'
+
     # todo: set  permission_denied_message
     # permission_denied_message = "Login First"
-    model = Emails
-    template_name = 'emails/inbox_list.html'
 
     def get_context_data(self, **kwargs):
-        context = super(InboxList, self).get_context_data(**kwargs)
+        context = super(BaseList, self).get_context_data(**kwargs)
         context['form1'] = NewEmailForm()
         context['form2'] = NewContact()
         signatures = Signature.objects.filter(owner__id=self.request.user.pk)
         context['signatures'] = signatures
+        context['labels'] = Category.objects.filter(owner_id=self.request.user.pk)
         return context
 
+
+class InboxList(BaseList):
+    model = Emails
+    template_name = 'emails/inbox_list.html'
+
     def get_queryset(self):
-        return Emails.objects.filter(~Q(status="trash"),
-                                     receiver=self.request.user.pk,
-                                     is_archive=False,
-                                     )
+        return Emails.objects.filter(
+            receiver=self.request.user.pk,
+            is_archive=False,
+            is_trash=False)
 
 
-class SentList(LoginRequiredMixin, ListView):
-    login_url = '/accounts/login/'
-    # todo: set  permission_denied_message
-    # permission_denied_message = "Login First"
+class SentList(BaseList):
     model = Emails
     context_object_name = 'emails'
     template_name = 'emails/sent_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(SentList, self).get_context_data(**kwargs)
-        context['form1'] = NewEmailForm()
-        context['form2'] = NewContact()
-        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
-        context['signatures'] = signatures
-        return context
-
     def get_queryset(self):
-        return Emails.objects.filter(~Q(status="trash"),
-                                     sender=self.request.user.pk,
-                                     status="send",
-                                     is_archive=False)
+        return Emails.objects.filter(
+            sender=self.request.user.pk,
+            status="send",
+            is_archive=False,
+            is_trash=False)
 
 
-class DraftList(LoginRequiredMixin, ListView):
-    login_url = '/accounts/login/'
-    # todo: set  permission_denied_message
-    # permission_denied_message = "Login First"
+class DraftList(BaseList):
     model = Emails
     template_name = 'emails/draft_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(DraftList, self).get_context_data(**kwargs)
-        context['form1'] = NewEmailForm()
-        context['form2'] = NewContact()
-        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
-        context['signatures'] = signatures
-        return context
-
     def get_queryset(self):
-        return Emails.objects.filter(~Q(status="trash"),
-                                     sender=self.request.user.pk,
-                                     status="draft",
-                                     is_archive=False)
+        return Emails.objects.filter(
+            sender=self.request.user.pk,
+            status="draft",
+            is_archive=False,
+            is_trash=False)
 
 
-class TrashList(LoginRequiredMixin, ListView):
-    login_url = '/accounts/login/'
-    # todo: set  permission_denied_message
-    # permission_denied_message = "Login First"
+class TrashList(BaseList):
     model = Emails
     template_name = 'emails/trash_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(TrashList, self).get_context_data(**kwargs)
-        context['form1'] = NewEmailForm()
-        context['form2'] = NewContact()
-        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
-        context['signatures'] = signatures
-        return context
-
     def get_queryset(self):
         return Emails.objects.filter(
             Q(sender=self.request.user.pk) | Q(receiver=self.request.user.pk),
-            status="trash")
+            is_trash=True)
 
 
-class ArchiveList(LoginRequiredMixin, ListView):
-    login_url = '/accounts/login/'
-    # todo: set  permission_denied_message
-    # permission_denied_message = "Login First"
+class ArchiveList(BaseList):
     model = Emails
     template_name = 'emails/archive_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(ArchiveList, self).get_context_data(**kwargs)
-        context['form1'] = NewEmailForm()
-        context['form2'] = NewContact()
-        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
-        context['signatures'] = signatures
-        return context
-
     def get_queryset(self):
         return Emails.objects.filter(
-            ~Q(status="trash"),
             Q(sender=self.request.user.pk) | Q(receiver=self.request.user.pk),
-            is_archive=True)
+            is_archive=True, is_trash=False)
 
 
 @login_required(redirect_field_name='login')
@@ -169,7 +133,7 @@ def new_email(request):
                                               )
                 for user in users:
                     email.receiver.add(user)
-                    email.save()
+                email.save()
                 return redirect('sent')
             return render(request, 'emails/new_error.html', {'form': form})
         if 'draft_submit' in request.POST:
@@ -208,18 +172,67 @@ class EmailDetail(LoginRequiredMixin, DetailView):
 
 
 @login_required(redirect_field_name='login')
-def add_archive(request, pk):
+def check_archive(request, pk):
     if request.method == "GET":
         email = Emails.objects.get(pk=pk)
-        email.is_archive = True
-        email.save()
+        if email.is_archive is False:
+            email.is_archive = True
+        elif email.is_archive is True:
+            email.is_archive = False
+        email.save(update_fields=['is_archive'])
         return redirect('archive')
 
 
 @login_required(redirect_field_name='login')
-def add_trash(request, pk):
+def check_trash(request, pk):
     if request.method == "GET":
         email = Emails.objects.get(pk=pk)
-        email.status = 'trash'
-        email.save()
+        if email.is_trash is False:
+            email.is_trash = True
+        elif email.is_trash is True:
+            email.is_trash = False
+        email.save(update_fields=['is_trash'])
         return redirect('trash')
+
+
+class LabelEmailList(BaseList):
+    model = Emails
+    template_name = 'emails/label_email_list.html'
+
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        return Emails.objects.filter(category__id=pk,
+                                     receiver=self.request.user.pk,
+                                     is_archive=False,
+                                     is_trash=False, )
+
+
+@login_required(redirect_field_name='login')
+def new_label(request):
+    if request.method == "POST":
+        title = request.POST.get('title')
+        owner = request.user.pk
+        try:
+            new_cat = Category(owner_id=owner,
+                               title=title)
+            new_cat.save()
+            messages.add_message(request, messages.SUCCESS, "The label added successfully")
+            return redirect('inbox')
+        except IntegrityError:
+            messages.add_message(request, messages.SUCCESS, "The label exist")
+            return redirect('inbox')
+
+
+@login_required(redirect_field_name='login')
+def delete_label(request):
+    if request.method == "POST":
+        title = request.POST.get('title')
+        owner = request.user.pk
+        if title == "...":
+            messages.add_message(request, messages.SUCCESS, "Select a label title!")
+            return redirect('inbox')
+
+        cat = Category.objects.get(owner_id=owner, title=title)
+        cat.delete()
+        messages.add_message(request, messages.SUCCESS, "The label deleted successfully")
+        return redirect('inbox')
