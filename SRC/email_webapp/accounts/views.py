@@ -1,6 +1,9 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -12,13 +15,21 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.template.loader import render_to_string
+from django.views.generic import DetailView, UpdateView, ListView
+
 from .tokens import account_activation_token
 from utils import send_otp_code, send_recover_link
+from emails.forms import *
+from emails.views import BaseList
 from .forms import *
+
 import random
 
 
 def home(request):
+    # todo: make a template to error when they are login
+    # if request.user.is_authenticated:
+    #     return HttpResponse("No")
     return render(request, "users/home.html")
 
 
@@ -51,50 +62,54 @@ class Register(View):
         form.phone = request.POST.get("phone")
         form.recovery = request.POST.get("recovery")
         form.birth_date = request.POST.get("birth_date")
-        if form.is_valid():
+        try:
+            if form.is_valid():
 
-            try:
-                user = form.save(commit=False)  # Do not save to table yet
-                user.username += "@gmz.com"
-                validate_password(form.cleaned_data['password'], user)
-            except ValidationError as e:
-                form.add_error('password', e)  # to be displayed with the field's errors
-                return render(request, "users/register_form.html", {'form': form})
-            # except IntegrityError:
-            #     form.add_error('username', "This username exist")
-            #     return render(request, "users/register_form.html", {"form": form})
+                try:
+                    user = form.save(commit=False)  # Do not save to table yet
+                    user.username += "@gmz.com"
+                    validate_password(form.cleaned_data['password'], user)
+                except ValidationError as e:
+                    form.add_error('password', e)  # to be displayed with the field's errors
+                    return render(request, "users/register_form.html", {'form': form})
 
-            if form.email_address is not None:
-                form.save()
-                send_validation_email(request, user)
-                messages.add_message(
-                    request, messages.SUCCESS,
-                    'We sent you an email to verify your account')
-                return HttpResponseRedirect("/accounts/login/")
-            if form.phone is not None:
-                request.session['registration_info'] = {
-                    'username': form.cleaned_data['username'] + "@gmz.com",
-                    'phone': form.cleaned_data['phone'],
-                    'email': form.cleaned_data['email_address'],
-                    'first_name': form.cleaned_data['first_name'],
-                    'last_name': form.cleaned_data['last_name'],
-                    'birth_date': form.cleaned_data['birth_date'],
-                    'password': form.cleaned_data['password'],
-                    'recovery': form.cleaned_data['recovery']
-                }
+                if form.email_address is not None:
+                    form.save()
+                    send_validation_email(request, user)
+                    messages.add_message(
+                        request, messages.SUCCESS,
+                        'We sent you an email to verify your account')
+                    return HttpResponseRedirect("/accounts/login/")
+                if form.phone is not None:
+                    request.session['registration_info'] = {
+                        'username': form.cleaned_data['username'] + "@gmz.com",
+                        'phone': form.cleaned_data['phone'],
+                        'email': form.cleaned_data['email_address'],
+                        'first_name': form.cleaned_data['first_name'],
+                        'last_name': form.cleaned_data['last_name'],
+                        'birth_date': form.cleaned_data['birth_date'],
+                        'password': form.cleaned_data['password'],
+                        'recovery': form.cleaned_data['recovery']
+                    }
 
-                random_code = random.randint(1000, 9999)
-                send_otp_code(user.phone, random_code)
-                OtpCode.objects.create(phone_number=form.cleaned_data['phone'], code=random_code)
-                messages.add_message(request, messages.INFO,
-                                     "We sent your phone a verify code,enter it please")
-                return redirect(f"/accounts/phone/activate/")
-
-        return render(request, "users/register_form.html", {"form": form})
+                    random_code = random.randint(1000, 9999)
+                    send_otp_code(user.phone, random_code)
+                    OtpCode.objects.create(phone_number=form.cleaned_data['phone'], code=random_code)
+                    messages.add_message(request, messages.INFO,
+                                         "We sent your phone a verify code,enter it please")
+                    return redirect(f"/accounts/phone/activate/")
+        except IntegrityError:
+            form.add_error('username', "This username exist")
+            return render(request, "users/register_form.html", {"form": form})
+        else:
+            return render(request, "users/register_form.html", {"form": form})
 
 
 class Login(View):
     def get(self, request):
+        # todo: make a template to error when they are login
+        # if request.user.is_authenticated:
+        #     return HttpResponse("Your already log in")
         return render(request, "users/login.html")
 
     def post(self, request):
@@ -110,12 +125,19 @@ class Login(View):
                         'Email is not verified, please check your email inbox')
                     return redirect("login")
             login(request, user)
-            return HttpResponse(f"Log in ! Wellcome ")
+            return HttpResponseRedirect("/gmz-email/inbox/")
 
         messages.add_message(
             request, messages.ERROR,
             'wrong username or password')
         return redirect("login")
+
+
+@login_required(redirect_field_name='login')
+def logout_view(request):
+    if request.method == 'GET':
+        logout(request)
+        return redirect("/accounts/login/")
 
 
 class ActivateEmail(View):
@@ -237,3 +259,119 @@ class NewPassword(View):
             user.save()
             messages.add_message(request, messages.SUCCESS, "your password changed successfully")
             return redirect("login")
+
+
+class ContactList(BaseList):
+    model = Contacts
+    template_name = 'users/contact_list.html'
+
+    def get_queryset(self):
+        return Contacts.objects.filter(owner=self.request.user.pk)
+
+
+class ContactDetail(LoginRequiredMixin, DetailView):
+    model = Contacts
+    template_name = 'users/contact_detail.html'
+    context_object_name = 'contact'
+
+    def get_context_data(self, **kwargs):
+        context = super(ContactDetail, self).get_context_data(**kwargs)
+        context['form1'] = NewEmailForm()
+        context['form2'] = NewContact()
+        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
+        context['signatures'] = signatures
+        return context
+
+
+@login_required(redirect_field_name='login')
+def new_contact(request):
+    if request.method == "POST":
+        form = NewContact(request.POST)
+        form.birth_date = request.POST.get("birth_date")
+        try:
+            if form.is_valid():
+                contact = form.save(commit=False)
+                contact.owner = User.objects.get(pk=request.user.pk)
+
+                try:
+                    user = User.objects.get(username=contact.email)
+                except ObjectDoesNotExist:
+                    form.add_error('email', "this email dose not exist in the site")
+                    return render(request, 'emails/new_error.html', {'form': form})
+
+                if user:
+                    contact.save()
+                    return redirect('contacts')
+        except IntegrityError:
+            form.add_error('email', "You saved this contact once")
+            return render(request, 'emails/new_error.html', {'form': form})
+        else:
+            return render(request, 'emails/new_error.html', {'form': form})
+
+
+class UpdateContact(LoginRequiredMixin, UpdateView):
+    model = Contacts
+    context_object_name = 'contact'
+    fields = ['name', 'email', 'birth_date', 'emails', 'phone']
+    template_name = 'users/edit_contact.html'
+
+    def get_success_url(self):
+        self.success_url = f"/accounts/contact-detail/{self.object.pk}/"
+        return self.success_url
+
+    def get_context_data(self, **kwargs):
+        context = super(UpdateContact, self).get_context_data(**kwargs)
+        context['form1'] = NewEmailForm()
+        context['form2'] = NewContact()
+        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
+        context['signatures'] = signatures
+        return context
+
+
+@login_required(redirect_field_name='login')
+def delete_contact(request, pk):
+    if request.method == 'GET':
+        contact = Contacts.objects.get(pk=pk)
+        contact.delete()
+        return redirect('contacts')
+
+
+@login_required(redirect_field_name='login')
+def email_contact(request, email):
+    if request.method == "POST":
+        sender = User.objects.get(pk=request.user.pk)
+        form = NewEmailForm(request.POST, request.FILES)
+        if request.POST.get('signature') != 'None':
+            signature = Signature.objects.get(owner_id=sender.pk,
+                                              text=request.POST.get('signature')).pk
+        else:
+            signature = None
+        if 'email_submit' in request.POST:
+            if form.is_valid():
+                print(email)
+                receiver = User.objects.get(username=email)
+                print(receiver)
+                email = Emails.objects.create(sender=sender,
+                                              title=form.cleaned_data['title'],
+                                              text=form.cleaned_data['text'],
+                                              file=form.cleaned_data['file'],
+                                              status='send',
+                                              is_to=True,
+                                              signature_id=signature
+                                              )
+                email.receiver.add(receiver)
+                email.save()
+                return redirect('sent')
+            return render(request, 'emails/new_error.html', {'form': form})
+
+        if 'draft_submit' in request.POST:
+            if form.is_valid() is False or form.is_valid() is True:
+                email = Emails.objects.create(sender=sender,
+                                              title=form.cleaned_data['title'],
+                                              text=form.cleaned_data['text'],
+                                              file=form.cleaned_data['file'],
+                                              status='draft',
+                                              signature_id=signature
+                                              )
+                email.save()
+                return redirect('draft')

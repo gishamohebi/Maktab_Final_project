@@ -1,0 +1,38 @@
+body {
+    font-family: calibri;
+    padding: 0;
+    margin: 0;
+}
+
+
+.loginBox {
+
+
+    margin: 1% auto 0% auto;
+    padding: 5px 60px 20px 60px;
+    width: 40%;
+    height: 50%;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, .5);
+
+}
+
+h2 {
+    padding-top: 30px;
+    padding-bottom: 30px;
+    text-align: center;
+    color: violet;
+    background-color: #FFFFFF;
+
+}
+
+
+
+.loginBox a{
+    color: #FFFFFF;
+}
+
+.loginBox h4{
+    color: antiquewhite;
+    font-family: "Times New Roman";
+}

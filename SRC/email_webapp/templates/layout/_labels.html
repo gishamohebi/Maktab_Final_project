@@ -1,0 +1,78 @@
+<br>
+<br>
+<div class="btn-group" style="margin-left: -40rem">
+    <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        labels
+    </button>
+    <ul class="dropdown-menu">
+        {% if labels %}
+            {% for label in labels %}
+                <li><a class="dropdown-item" href="/gmz-email/label/{{ label.id }}/"> {{ label }}</a></li>
+
+            {% endfor %}
+        {% endif %}
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item" data-toggle="modal" data-target="#newlabel">Creat new label</a></li>
+        <li><a class="dropdown-item" data-toggle="modal" data-target="#deletelabel">delete label</a></li>
+    </ul>
+</div>
+<br>
+<br>
+
+<div id="newlabel" class="modal" role="dialog" style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<form method="post"
+      style="width: 500px;height: auto;background-color: cornflowerblue"
+      action="/gmz-email/new-label/"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <center>
+        <div style="display: flex;flex-direction: column">
+            <center>
+                <p>New label</p>
+                <div class="col-xs-4">
+                    <label for="ex2">Title</label>
+                    <input class="form-control" id="ex2" type="text" name="title">
+                </div>
+            </center>
+
+        </div>
+    </center>
+    <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+    <button type="submit" data-dismiss="modal" class="btn btn-outline-secondary" name="draft_submit" value="close">
+        cancel
+    </button>
+</form>
+</div>
+
+
+<div id="deletelabel" class="modal" role="dialog"
+     style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<form method="post"
+      style="width: 500px;height: auto;background-color: cornflowerblue"
+      action="/gmz-email/delete-label/"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <center>
+        <br>
+        <h3>Delete Lable</h3>
+        <br>
+        <div style="display: flex;flex-direction: column">
+            <center>
+                <select name="title" style="width: 200px;color: #DC143C;font: 20px">
+                    <option>...</option>
+                    {% for label in labels %}
+                        <option>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </center>
+        </div>
+    </center>
+    <br>
+    <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+    <button type="submit" data-dismiss="modal" class="btn btn-outline-secondary" name="draft_submit" value="close">
+        cancel
+    </button>
+</form>
+</div>

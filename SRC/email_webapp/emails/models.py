@@ -7,18 +7,31 @@ from django.contrib.auth.models import AbstractUser
 # Create your models here.
 
 class Category(models.Model):
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False
+    )
+
     title = models.CharField(
         max_length=50,
         blank=True,
         null=True
     )
 
+    class Meta:
+        unique_together = ["owner", "title"]
+
+    def __str__(self):
+        return self.title
+
 
 class Signature(models.Model):
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        null=True,
+        null=False,
         blank=False
     )
     text = models.TextField(
@@ -37,7 +50,8 @@ class Emails(models.Model):
     )
     receiver = models.ManyToManyField(
         User,
-        related_name="receiver"
+        related_name="receiver",
+        # todo: About more info in table
     )
     category = models.ManyToManyField(
         Category,
@@ -67,9 +81,26 @@ class Emails(models.Model):
     pub_date = models.DateTimeField(
         auto_now=True
     )
-    is_sent = models.BooleanField(default=False)
-    is_inbox = models.BooleanField(default=False)
-    is_read = models.BooleanField(default=False)
-    is_draft = models.BooleanField(default=False)
-    is_starred = models.BooleanField(default=False)
+    status_choice = [
+        ("send", "send"),
+        ("draft", "draft"),
+
+    ]
+    status = models.CharField(
+        max_length=5,
+        choices=status_choice,
+        null=False,
+        blank=False,
+        default=None
+    )
     is_trash = models.BooleanField(default=False)
+    is_archive = models.BooleanField(default=False)
+    is_cc = models.BooleanField(default=False)
+    is_bcc = models.BooleanField(default=False)
+    is_to = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.status
+
+    class Meta:
+        ordering = ['-pub_date']

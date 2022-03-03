@@ -92,7 +92,6 @@ class Contacts(models.Model):
         on_delete=models.CASCADE
     )
     email = models.EmailField(
-        unique=True,
         blank=False,
         null=False,
         validators=[valid_contact]
@@ -123,6 +122,12 @@ class Contacts(models.Model):
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        unique_together = ["owner", "email"]
 
 
 class OtpCode(models.Model):

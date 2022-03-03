@@ -1,0 +1,164 @@
+*, *:before, *:after {
+    box-sizing: border-box;
+}
+
+:after {
+    content: "";
+}
+
+section {
+    position: relative;
+    left: 100px;
+}
+
+.header {
+    padding-top: 8px;
+    background-color: #DC143C;
+    width: 500px;
+    height: 50px;
+    font-family: "Times New Roman";
+    border-radius: 5px;
+}
+
+h1 {
+    margin: 80px 0 10px 0;
+    font-size: 52px;
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 0px #DC143C,
+    2px 2px 0px #DC143C,
+    3px 3px 0px #DC143C,
+    4px 4px 0px #DC143C;
+}
+
+h2 {
+    font-size: 24px;
+}
+
+body {
+
+    padding: 100px 0;
+    background-color: cadetblue;
+    color: white;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+nav {
+    padding-top: 2rem;
+    padding-left: 15px;
+    position: fixed;
+    float: left;
+    top: 0;
+    left: 0;
+    background: transparent;
+}
+
+nav ul {
+    text-align: center;
+}
+
+nav ul a {
+    color: #FFFFFF;
+
+
+}
+
+
+nav ul li {
+    position: relative;
+    width: 70px;
+    height: 40px;
+    cursor: pointer;
+    background: crimson;
+    text-transform: uppercase;
+    transition: all .4s ease-out;
+}
+
+nav ul li:after {
+    position: absolute;
+    background: white;
+    color: crimson;
+    top: 0;
+    left: 70px;
+    width: 90px;
+    height: 100%;
+    opacity: .5;
+    transform: perspective(400px) rotateY(90deg);
+    transform-origin: 0 100%;
+    transition: all .4s ease-out;
+}
+
+
+.li1:nth-child(1):after {
+    content: "Home";
+    line-height: 50px;
+
+
+}
+
+.li1_0:nth-child(1):after {
+    content: "+Email";
+    line-height: 50px;
+
+
+}
+
+.li1_1:nth-child(1):after {
+    content: "+Contact";
+    line-height: 50px;
+
+
+}
+
+.li1_2:nth-child(1):after {
+    content: "Contacts";
+    line-height: 50px;
+
+
+}
+
+
+.li2:nth-child(1):after {
+    content: "Inbox";
+    line-height: 50px;
+}
+
+.li3:nth-child(1):after {
+    content: "Sent";
+    line-height: 50px;
+}
+
+.li4:nth-child(1):after {
+    content: "Drafts";
+    line-height: 50px;
+}
+
+.li5:nth-child(1):after {
+    content: "Trash";
+    line-height: 50px;
+}
+
+
+
+.li7:nth-child(1):after {
+    content: "Logout";
+    line-height: 50px;
+}
+
+.li9:nth-child(1):after {
+    content: "archive";
+    line-height: 50px;
+}
+
+nav ul li:hover {
+    transform: translateX(-70px);
+}
+
+nav ul li:hover:after {
+    opacity: 1;
+    transform: perspective(400px) rotateY(0deg) scale(1);
+}
+
+

@@ -1,0 +1,21 @@
+<div id="newcontactModal" class="modal modal-style" role="dialog"
+     style="color: red; #5B42F3;margin-top: 50px;align-items: center">
+    <form method="post" style="width: 600px;height: auto;background-color: cornflowerblue"
+          action="/accounts/new-contact/">
+        {% csrf_token %}
+        <div style="display: flex;flex-direction: column">
+            <p>New Contact</p>
+            {{ form2.as_p }}
+            <label>Birth date</label>
+            <center>
+                <input type="date" name="birth_date" value="birth_date" style="width: 100px">
+            </center>
+
+        </div>
+        <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+        <button type="submit" data-dismiss="modal" class="btn btn-outline-secondary" name="draft_submit" value="close">
+            close
+        </button>
+    </form>
+    {{ message }}
+</div>

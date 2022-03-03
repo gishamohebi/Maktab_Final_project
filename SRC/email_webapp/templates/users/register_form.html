@@ -18,7 +18,9 @@
             <form action="" method="post">
                 {% csrf_token %}
                 <p>Username</p>
-                <div name="fname">{{ form.username }}</div>
+                <div name="fname">
+                    <p>{{ form.username }}</p>
+                </div>
                 <p>Password</p>
                 <div name="pword1">
                     {{ form.password }}
@@ -60,29 +62,9 @@
             </form>
         </div>
     </center>
-    <script type="text/javascript">
-        $(function () {
-            $("#recovery").change(function () {
-                if ($(this).val() == "Phone") {
-                    $("#Phone").removeAttr("disabled");
-                    $("#Phone").attr("required", "required");
-                    $("#Email").val("")
-                    $("#Email").attr("disabled", "disabled");
-                    $("#Phone").focus();
-                }
-            });
-        });
-        $(function () {
-            $("#recovery").change(function () {
-                if ($(this).val() == "Email") {
-                    $("#Email").removeAttr("disabled");
-                    $("#Email").attr("required", "required");
-                    $("#Phone").attr("disabled", "disabled");
-                    $("#Phone").val("")
-                    $("#Email").focus();
-                }
-            });
-        });
-    </script>
+    <script src="{% static 'javascript_files/register_form.js' %}"></script>
+{#    <script type="text/javascript">#}
+{#  #}
+{#    </script>#}
 {% endblock %}
 
