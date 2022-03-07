@@ -1,0 +1,23 @@
+<div id="forwardemail" class="modal" role="dialog"
+     style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<form method="post"
+      style="width: 500px;height: auto;background-color: cornflowerblue"
+      action="/gmz-email/forward-email/{{ email.pk }}/"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <center>
+        <div style="display: flex;flex-direction: column">
+            <lable>to :</lable>
+            <p>{{ form1.receiver_to }}</p>
+            <lable>cc :</lable>
+            <p>{{ form1.receiver_cc }}</p>
+            <lable>bcc :</lable>
+            <p>{{ form1.receiver_bcc }}</p>
+            <lable>title :</lable>
+            <p>{{ form1.title }}</p>
+        </div>
+    </center>
+    <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+    <input type="submit" class="btn btn-outline-secondary" name="draft_submit" value="close">
+</form>
+</div>

@@ -1,0 +1,62 @@
+<div id="selectlabel" class="modal" role="dialog"
+     style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<form method="post"
+      style="width: 500px;height: auto;background-color: cornflowerblue"
+      action="/gmz-email/set-label/{{ email.pk }}/"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <center>
+        <br>
+        <h3>Select Lable</h3>
+        <br>
+        <a data-toggle="modal" data-target="#newlabel">
+            <h4>create new</h4>
+        </a>
+        <br>
+        <br>
+        <div style="display: flex;flex-direction: column">
+            <center>
+                <select name="title" style="width: 200px;color: #DC143C;font: 20px">
+                    <option>...</option>
+
+                    {% for label in labels %}
+                        <option>{{ label }}</option>
+                    {% endfor %}
+                    <hr style="color: #DC143C">
+                </select>
+            </center>
+        </div>
+    </center>
+    <br>
+    <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+    <button type="submit" data-dismiss="modal" class="btn btn-outline-secondary" name="draft_submit" value="close">
+        cancel
+    </button>
+</form>
+</div>
+
+
+<div id="newlabel" class="modal" role="dialog" style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<form method="post"
+      style="width: 500px;height: auto;background-color: #f9dd94"
+      action="/gmz-email/new-label/"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <center>
+        <div style="display: flex;flex-direction: column">
+            <center>
+                <p>New label</p>
+                <div class="col-xs-4">
+                    <label for="ex2">Title</label>
+                    <input class="form-control" id="ex2" type="text" name="title">
+                </div>
+            </center>
+
+        </div>
+    </center>
+    <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+    <button type="submit" data-dismiss="modal" class="btn btn-outline-secondary" name="draft_submit" value="close">
+        cancel
+    </button>
+</form>
+</div>
