@@ -1,39 +1,39 @@
 <br>
 <br>
-<div class="btn-group" style="margin-left: +40rem">
+<div class="btn-group" style="margin-left: +30rem">
     <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        labels
+        signatures
     </button>
     <ul class="dropdown-menu">
         {% if labels %}
-            {% for label in labels %}
-                <li><a class="dropdown-item" href="/gmz-email/label/{{ label.id }}/"> {{ label }}</a></li>
+            {% for signature in signatures %}
+                <li> {{ signature }}</li>
 
             {% endfor %}
         {% endif %}
         <li>
             <hr class="dropdown-divider">
         </li>
-        <li><a class="dropdown-item" data-toggle="modal" data-target="#newlabel">Creat new label</a></li>
-        <li><a class="dropdown-item" data-toggle="modal" data-target="#deletelabel">delete label</a></li>
+        <li><a class="dropdown-item" data-toggle="modal" data-target="#newsignature">Creat new sign</a></li>
+        <li><a class="dropdown-item" data-toggle="modal" data-target="#deletsignature">delete sign</a></li>
     </ul>
 </div>
 <br>
 <br>
 
-<div id="newlabel" class="modal" role="dialog" style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<div id="newsignature" class="modal" role="dialog" style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
 <form method="post"
       style="width: 500px;height: auto;background-color: cornflowerblue"
-      action="/gmz-email/new-label/"
+      action="/gmz-email/new-signature/"
       enctype="multipart/form-data">
     {% csrf_token %}
     <center>
         <div style="display: flex;flex-direction: column">
             <center>
-                <p>New label</p>
+                <p>New signature</p>
                 <div class="col-xs-4">
-                    <label for="ex2">Title</label>
-                    <input class="form-control" id="ex2" type="text" name="title">
+                    <label for="ex2">text</label>
+                    <input class="form-control" id="ex2" type="text" name="text">
                 </div>
             </center>
 
@@ -47,23 +47,23 @@
 </div>
 
 
-<div id="deletelabel" class="modal" role="dialog"
+<div id="deletsignature" class="modal" role="dialog"
      style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
 <form method="post"
       style="width: 500px;height: auto;background-color: cornflowerblue"
-      action="/gmz-email/delete-label/"
+      action="/gmz-email/delete-signature/"
       enctype="multipart/form-data">
     {% csrf_token %}
     <center>
         <br>
-        <h3>Delete Lable</h3>
+        <h3>Delete signature</h3>
         <br>
         <div style="display: flex;flex-direction: column">
             <center>
-                <select name="title" style="width: 200px;color: #DC143C;font: 20px">
+                <select name="text" style="width: 200px;color: #DC143C;font: 20px">
                     <option>...</option>
-                    {% for label in labels %}
-                        <option>{{ label }}</option>
+                    {% for signature in signatures %}
+                        <option>{{ signature }}</option>
                     {% endfor %}
                 </select>
             </center>

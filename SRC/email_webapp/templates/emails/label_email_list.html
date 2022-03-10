@@ -2,11 +2,13 @@
 {% block title %}Inbox{% endblock %}
 {% block style %}
     {% load static %}
+    {{ form1.media }}
     <link href="{% static "emails/sidebarr.css" %}" rel="stylesheet"/>
     <link href="{% static "emails/listing.css" %}" rel="stylesheet"/>
 {% endblock %}
 {% block body %}
     <center>
+        {% include "comments/label_message.html" %}
         <div class="header">
 
             <h4>
@@ -20,7 +22,9 @@
                     <a href="/gmz-email/email-detail/{{ email.id }}">
                         {{ email.sender }} : {{ email.title }} - {{ email.pub_date }}
                     </a>
+
                 </li>
+
             {% endfor %}
         </ol>
         {% include "emails/new_email.html" %}

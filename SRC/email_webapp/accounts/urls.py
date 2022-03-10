@@ -15,6 +15,7 @@ urlpatterns = [
     path("contact-detail/<int:pk>/", ContactDetail.as_view(), name="edit_contact"),
     path("update-contact/<int:pk>/", UpdateContact.as_view(), name="edit_contact"),
     path("delete-contact/<int:pk>/", delete_contact, name="delete_contact"),
-    path('contact-new-email/<str:email>/', email_contact, name='email_contact')
+    path('contact-new-email/<str:email>/', email_contact, name='email_contact'),
+    path('csv-contacts/', csv_contacts, name='csv_contacts'),
 
 ]

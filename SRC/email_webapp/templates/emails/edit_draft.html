@@ -1,17 +1,24 @@
-{% load crispy_forms_tags %}
-<div id="newemailModal" class="modal" role="dialog"
+<div id="editdraft" class="modal" role="dialog"
      style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
 <form method="post"
       style="width: 500px;height: auto;background-color: cornflowerblue"
-      action="/gmz-email/new-email/"
+      action="/gmz-email/edit-draft/{{ email.pk }}/"
       enctype="multipart/form-data">
     {% csrf_token %}
-
     <center>
         <div style="display: flex;flex-direction: column">
-            <p>New email</p>
-
-            {{ form1|crispy }}
+            <lable>to :</lable>
+            <p>{{ form1.receiver_to }}</p>
+            <lable>cc :</lable>
+            <p>{{ form1.receiver_cc }}</p>
+            <lable>bcc :</lable>
+            <p>{{ form1.receiver_bcc }}</p>
+            <lable>title :</lable>
+            <input name="title" type="text" value="{{ email.title }}">
+            <label>text :</label>
+            <input name="text" type="text" value="{{ email.text }}">
+            <label>file : </label>
+            <input type="file" name="file" value="{{ email.file }}">
             <label>Signature</label>
             <select name="signature">
                 <option value="None">None</option>

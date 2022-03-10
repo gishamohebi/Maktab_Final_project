@@ -2,32 +2,39 @@
 {% block title %}email detail{% endblock %}
 {% block style %}
     {% load static %}
+    {{ form1.media }}
     <link href="{% static "emails/sidebarr.css" %}" rel="stylesheet"/>
     <link href="{% static "emails/listing.css" %}" rel="stylesheet"/>
 {% endblock %}
 {% block body %}
     <center>
+        {% include "comments/label_message.html" %}
         <div class="header">
             <h4>
                 {{ user.username }}
             </h4>
         </div>
         <div class="card border border-danger"
-             style="width: 40rem;height:auto;background-color: bisque;
+             style="width: 55rem;height:auto;background-color: bisque;
              color: black; margin-top: 5rem ;" ;>
             <br>
             <h4><strong>Title : {{ email.title }}</strong></h4>
-            <div style="margin-left: -150px">
-                <br>
+            <hr style="color: #DC143C"/>
+            <center>
+                <div style="width: 40rem;height:auto;">
 
-                <p>from : {{ email.sender }}</p>
-                {% if people %}
-                    <p>to : {{ people|join:"," }}</p>
-                {% endif %}
-                {% if person %}
-                    <p>to : {{ person }}</p>
-                {% endif %}
-            </div>
+                    <p>from : {{ email.sender }}</p>
+                    {% if people %}
+                        <p>to : {{ people|join:"," }}</p>
+                    {% endif %}
+                    {% if person %}
+                        <p>to : {{ person }}</p>
+                    {% endif %}
+                </div>
+            </center>
+
+            <hr style="color: #DC143C"/>
+            <br>
             <h5>
                 {{ email.text }}
 
@@ -37,23 +44,107 @@
                 {{ email.signature }}
             {% endif %}
             <p>
-                {{ email.pub_date }}
+            <center>
+                {% if email.file %}
+                    <a href="/gmz-email/download-file/{{ email.file }}/">
+                        attachment
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                             class="bi bi-paperclip" viewBox="0 0 16 16">
+                            <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/>
+                        </svg>
+                        <br>
+                    </a>
+
+                {% endif %}
+
+            </center>
+            <br>
+            {{ email.pub_date }}
             </p>
             <br>
+            <hr style="color: #DC143C"/>
+            {% if parent_text %}
+                <h6><strong>{{ parent_sender }}</strong></h6>
+                <h6>
+
+                    {{ parent_text }}
+
+                </h6>
+                <hr style="color: #DC143C"/>
+            {% endif %}
 
             <br>
-            {% if email.is_trash != True %}
+            {% if trash != True %}
+                {% if email.category %}
+                    <center>
+                        <a data-toggle="modal" data-target="#removelabel">
+                            remove label
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                 class="bi bi-file-minus" viewBox="0 0 16 16">
+                                <path d="M5.5 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5z"/>
+                                <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/>
+                            </svg>
+                        </a>
+
+                    </center>
+
+                    <br>
+                {% endif %}
+
                 <a href="/gmz-email/check-archive/{{ email.pk }}/">
+                    archive
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                          class="bi bi-archive"
                          viewBox="0 0 16 16">
                         <path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
                     </svg>
                 </a>
+                <br>
+                {% if email.status != 'draft' %}
+                    <a data-toggle="modal" data-target="#replyemail">
+                        reply
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                             class="bi bi-reply"
+                             viewBox="0 0 16 16">
+                            <path d="M6.598 5.013a.144.144 0 0 1 .202.134V6.3a.5.5 0 0 0 .5.5c.667 0 2.013.005 3.3.822.984.624 1.99 1.76 2.595 3.876-1.02-.983-2.185-1.516-3.205-1.799a8.74 8.74 0 0 0-1.921-.306 7.404 7.404 0 0 0-.798.008h-.013l-.005.001h-.001L7.3 9.9l-.05-.498a.5.5 0 0 0-.45.498v1.153c0 .108-.11.176-.202.134L2.614 8.254a.503.503 0 0 0-.042-.028.147.147 0 0 1 0-.252.499.499 0 0 0 .042-.028l3.984-2.933zM7.8 10.386c.068 0 .143.003.223.006.434.02 1.034.086 1.7.271 1.326.368 2.896 1.202 3.94 3.08a.5.5 0 0 0 .933-.305c-.464-3.71-1.886-5.662-3.46-6.66-1.245-.79-2.527-.942-3.336-.971v-.66a1.144 1.144 0 0 0-1.767-.96l-3.994 2.94a1.147 1.147 0 0 0 0 1.946l3.994 2.94a1.144 1.144 0 0 0 1.767-.96v-.667z"/>
+                        </svg>
+                    </a>
+                {% endif %}
+                <br>
+                {% if email.status != 'draft' %}
+                    <a data-toggle="modal" data-target="#forwardemail">
+                        forward
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                             class="bi bi-forward" viewBox="0 0 16 16">
+                            <path d="M9.502 5.513a.144.144 0 0 0-.202.134V6.65a.5.5 0 0 1-.5.5H2.5v2.9h6.3a.5.5 0 0 1 .5.5v1.003c0 .108.11.176.202.134l3.984-2.933a.51.51 0 0 1 .042-.028.147.147 0 0 0 0-.252.51.51 0 0 1-.042-.028L9.502 5.513zM8.3 5.647a1.144 1.144 0 0 1 1.767-.96l3.994 2.94a1.147 1.147 0 0 1 0 1.946l-3.994 2.94a1.144 1.144 0 0 1-1.767-.96v-.503H2a.5.5 0 0 1-.5-.5v-3.9a.5.5 0 0 1 .5-.5h6.3v-.503z"/>
+                        </svg>
+                    </a>
+                {% endif %}
+                {% if email.status == 'draft' %}
+                    <a data-toggle="modal" data-target="#editdraft">
+                        edit draft
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                             class="bi bi-pencil-square" viewBox="0 0 16 16">
+                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                            <path fill-rule="evenodd"
+                                  d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                        </svg>
+                    </a>
+                {% endif %}
+                <br>
+                <a data-toggle="modal" data-target="#selectlabel">
+                    label
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag"
+                         viewBox="0 0 16 16">
+                        <path d="M6 4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm-1 0a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0z"/>
+                        <path d="M2 1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 1 6.586V2a1 1 0 0 1 1-1zm0 5.586 7 7L13.586 9l-7-7H2v4.586z"/>
+                    </svg>
+                </a>
+
             {% endif %}
             <br>
-            <br>
             <a href="/gmz-email/check-trash/{{ email.pk }}/">
+                trash
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                      class="bi bi-trash3" viewBox="0 0 16 16">
                     <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"/>
@@ -63,6 +154,11 @@
         </div>
         <br>
         {% include "emails/new_email.html" %}
+        {% include "emails/reply_email.html" %}
+        {% include "emails/select_label.html" %}
+        {% include "emails/email_label.html" %}
+        {% include "emails/forward_email.html" %}
+        {% include "emails/edit_draft.html" %}
         {% include "users/new_contact.html" %}
     </center>
 

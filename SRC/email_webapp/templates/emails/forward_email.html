@@ -1,25 +1,20 @@
-{% load crispy_forms_tags %}
-<div id="newemailModal" class="modal" role="dialog"
+<div id="forwardemail" class="modal" role="dialog"
      style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
 <form method="post"
       style="width: 500px;height: auto;background-color: cornflowerblue"
-      action="/gmz-email/new-email/"
+      action="/gmz-email/forward-email/{{ email.pk }}/"
       enctype="multipart/form-data">
     {% csrf_token %}
-
     <center>
         <div style="display: flex;flex-direction: column">
-            <p>New email</p>
-
-            {{ form1|crispy }}
-            <label>Signature</label>
-            <select name="signature">
-                <option value="None">None</option>
-                {% for sign in signatures %}
-
-                    <option value="{{ sign }}">{{ sign }}</option>
-                {% endfor %}
-            </select>
+            <lable>to :</lable>
+            <p>{{ form1.receiver_to }}</p>
+            <lable>cc :</lable>
+            <p>{{ form1.receiver_cc }}</p>
+            <lable>bcc :</lable>
+            <p>{{ form1.receiver_bcc }}</p>
+            <lable>title :</lable>
+            <p>{{ form1.title }}</p>
         </div>
     </center>
     <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">

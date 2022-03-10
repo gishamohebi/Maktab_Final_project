@@ -51,7 +51,27 @@ class Emails(models.Model):
     receiver = models.ManyToManyField(
         User,
         related_name="receiver",
-        # todo: About more info in table
+
+    )
+    receiver_to = models.ManyToManyField(
+        User,
+        related_name="receiver_to",
+
+    )
+    receiver_cc = models.ManyToManyField(
+        User,
+        related_name="receiver_cc",
+
+    )
+    receiver_bcc = models.ManyToManyField(
+        User,
+        related_name="receiver_bcc",
+    )
+    reply_to = models.ForeignKey(
+        'self',
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True
     )
     category = models.ManyToManyField(
         Category,
@@ -67,14 +87,14 @@ class Emails(models.Model):
         null=True
     )
     file = models.FileField(
-        upload_to="%Y/%m_%d/",
+        upload_to='',
         validators=[file_size],
         null=True,
         blank=True
     )
     signature = models.ForeignKey(
         Signature,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
@@ -93,8 +113,6 @@ class Emails(models.Model):
         blank=False,
         default=None
     )
-    is_trash = models.BooleanField(default=False)
-    is_archive = models.BooleanField(default=False)
     is_cc = models.BooleanField(default=False)
     is_bcc = models.BooleanField(default=False)
     is_to = models.BooleanField(default=False)
@@ -104,3 +122,10 @@ class Emails(models.Model):
 
     class Meta:
         ordering = ['-pub_date']
+
+
+class EmailPlace(models.Model):
+    email = models.ForeignKey(Emails, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_trash = models.BooleanField(default=False)
+    is_archive = models.BooleanField(default=False)

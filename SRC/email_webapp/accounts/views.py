@@ -1,3 +1,5 @@
+import csv
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -348,9 +350,7 @@ def email_contact(request, email):
             signature = None
         if 'email_submit' in request.POST:
             if form.is_valid():
-                print(email)
                 receiver = User.objects.get(username=email)
-                print(receiver)
                 email = Emails.objects.create(sender=sender,
                                               title=form.cleaned_data['title'],
                                               text=form.cleaned_data['text'],
@@ -360,7 +360,12 @@ def email_contact(request, email):
                                               signature_id=signature
                                               )
                 email.receiver.add(receiver)
+                email.receiver_to.add(receiver)
                 email.save()
+                place = EmailPlace.objects.create(user=sender, email=email)
+                place.save()
+                place = EmailPlace.objects.create(user=receiver, email=email)
+                place.save()
                 return redirect('sent')
             return render(request, 'emails/new_error.html', {'form': form})
 
@@ -375,3 +380,17 @@ def email_contact(request, email):
                                               )
                 email.save()
                 return redirect('draft')
+
+
+def csv_contacts(request):
+    contacts = list(Contacts.objects.filter(owner=request.user.pk).values())
+    response = HttpResponse()
+    # to tell the http the format of the file in response
+    response['Content-Disposition'] = f"attachment; filename={request.user.username}-contacts.csv"
+    writer = csv.writer(response)
+    # the headers we have
+    writer.writerow(contacts[0].keys())
+    for contact in contacts:
+        writer.writerow(contact.values())
+
+    return response
