@@ -1,6 +1,7 @@
 from django import forms
 from .models import *
 from accounts.validators import *
+# from pagedown.widgets import PagedownWidget
 
 
 class NewEmailForm(forms.Form):
@@ -13,6 +14,7 @@ class NewEmailForm(forms.Form):
         max_length=50, required=False
     )
     text = forms.CharField(widget=forms.Textarea, required=False)
+
     file = forms.FileField(
         validators=[file_size],
         required=False

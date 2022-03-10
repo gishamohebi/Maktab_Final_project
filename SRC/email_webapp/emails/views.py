@@ -35,10 +35,13 @@ class InboxList(BaseList):
     template_name = 'emails/inbox_list.html'
 
     def get_queryset(self):
-        return Emails.objects.filter(
-            receiver=self.request.user.pk,
-            is_archive=False,
-            is_trash=False)
+        emails = Emails.objects.filter(receiver=self.request.user.pk)
+        for email in emails:
+            place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
+            for item in place:
+                if item.is_trash or item.is_archive is True:
+                    emails = emails.exclude(pk=email.pk)
+        return emails
 
 
 class SentList(BaseList):
@@ -47,11 +50,14 @@ class SentList(BaseList):
     template_name = 'emails/sent_list.html'
 
     def get_queryset(self):
-        return Emails.objects.filter(
-            sender=self.request.user.pk,
-            status="send",
-            is_archive=False,
-            is_trash=False)
+        emails = Emails.objects.filter(sender=self.request.user.pk, status="send", )
+        print(len(list(emails)))
+        for email in emails:
+            place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
+            for item in place:
+                if item.is_trash is True or item.is_archive is True:
+                    emails = emails.exclude(pk=email.pk)
+        return emails
 
 
 class DraftList(BaseList):
@@ -59,11 +65,13 @@ class DraftList(BaseList):
     template_name = 'emails/draft_list.html'
 
     def get_queryset(self):
-        return Emails.objects.filter(
-            sender=self.request.user.pk,
-            status="draft",
-            is_archive=False,
-            is_trash=False)
+        emails = Emails.objects.filter(sender=self.request.user.pk, status="draft")
+        for email in emails:
+            place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
+            for item in place:
+                if item.is_trash or item.is_archive is True:
+                    emails = emails.exclude(pk=email.pk)
+        return emails
 
 
 class TrashList(BaseList):
@@ -71,9 +79,13 @@ class TrashList(BaseList):
     template_name = 'emails/trash_list.html'
 
     def get_queryset(self):
-        return Emails.objects.filter(
-            Q(sender=self.request.user.pk) | Q(receiver=self.request.user.pk),
-            is_trash=True)
+        emails = Emails.objects.filter(Q(sender=self.request.user.pk) | Q(receiver=self.request.user.pk))
+        for email in emails:
+            place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
+            for item in place:
+                if item.is_trash is False or item.is_archive is True:
+                    emails = emails.exclude(pk=email.pk)
+        return emails
 
 
 class ArchiveList(BaseList):
@@ -81,9 +93,13 @@ class ArchiveList(BaseList):
     template_name = 'emails/archive_list.html'
 
     def get_queryset(self):
-        return Emails.objects.filter(
-            Q(sender=self.request.user.pk) | Q(receiver=self.request.user.pk),
-            is_archive=True, is_trash=False)
+        emails = Emails.objects.filter(Q(sender=self.request.user.pk) | Q(receiver=self.request.user.pk))
+        for email in emails:
+            place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
+            for item in place:
+                if item.is_trash is True or item.is_archive is False:
+                    emails = emails.exclude(pk=email.pk)
+        return emails
 
 
 @login_required(redirect_field_name='login')
@@ -143,14 +159,20 @@ def new_email(request):
                                               is_to=is_to,
                                               signature_id=signature
                                               )
-                email.receiver_cc.add(*users)
-                email.receiver.add(*users_cc)
-                email.receiver.add(*users_bcc)
-                email.receiver.add(*users_to)
+                email.receiver.add(*users)
+                email.receiver_cc.add(*users_cc)
+                email.receiver_bcc.add(*users_bcc)
+                email.receiver_to.add(*users_to)
                 email.save()
+                for user in users:
+                    place = EmailPlace.objects.create(user=user, email=email)
+                    place.save()
+                place = EmailPlace.objects.create(user=sender, email=email)
+                place.save()
                 return redirect('sent')
             return render(request, 'emails/new_error.html', {'form': form})
         if 'draft_submit' in request.POST:
+            form = NewEmailForm(request.POST, request.FILES)
             if form.is_valid() is False or form.is_valid() is True:
                 email = Emails.objects.create(sender=sender,
                                               title=form.cleaned_data['title'],
@@ -160,6 +182,8 @@ def new_email(request):
                                               signature_id=signature
                                               )
                 email.save()
+                place = EmailPlace.objects.create(user=sender, email=email)
+                place.save()
                 return redirect('draft')
 
 
@@ -183,6 +207,18 @@ class EmailDetail(LoginRequiredMixin, DetailView):
             email_parent = Emails.objects.get(pk=context['email'].reply_to.pk)
             context['parent_text'] = email_parent.text
             context['parent_sender'] = email_parent.sender
+
+        places = EmailPlace.objects.filter(email=self.object, user=self.request.user.pk)
+        for place in places:
+            if place.is_trash is True:
+                context['trash'] = True
+            else:
+                context['trash'] = False
+
+        if context['email'].status == 'draft':
+            # because draft emails were saved without receivers
+            return context
+
         # check if the email receiver is a to, cc or bcc type
         url = self.request.META.get('HTTP_REFERER').split('/')
 
@@ -210,11 +246,13 @@ class EmailDetail(LoginRequiredMixin, DetailView):
 def check_archive(request, pk):
     if request.method == "GET":
         email = Emails.objects.get(pk=pk)
-        if email.is_archive is False:
-            email.is_archive = True
-        elif email.is_archive is True:
-            email.is_archive = False
-        email.save(update_fields=['is_archive'])
+        places = EmailPlace.objects.filter(user=request.user.pk, email=email.pk)
+        for place in places:
+            if place.is_archive is False:
+                place.is_archive = True
+            elif place.is_archive is True:
+                place.is_archive = False
+            place.save(update_fields=['is_archive'])
         return redirect('archive')
 
 
@@ -222,11 +260,15 @@ def check_archive(request, pk):
 def check_trash(request, pk):
     if request.method == "GET":
         email = Emails.objects.get(pk=pk)
-        if email.is_trash is False:
-            email.is_trash = True
-        elif email.is_trash is True:
-            email.is_trash = False
-        email.save(update_fields=['is_trash'])
+        places = EmailPlace.objects.filter(user=request.user.pk, email=email.pk)
+        for place in places:
+            if place.is_trash is False:
+                place.is_trash = True
+                print(place)
+            elif place.is_trash is True:
+                place.is_trash = False
+                print(place)
+            place.save(update_fields=['is_trash'])
         return redirect('trash')
 
 
@@ -302,6 +344,11 @@ def reply_email(request, pk):
                 email.receiver.add(receiver_to)
                 email.receiver_to.add(receiver_to)
                 email.save()
+
+                place = EmailPlace.objects.create(user=sender, email=email)
+                place.save()
+                place = EmailPlace.objects.create(user=receiver_to, email=email)
+                place.save()
                 return redirect('sent')
             return render(request, 'emails/new_error.html', {'form': form})
 
@@ -315,6 +362,8 @@ def reply_email(request, pk):
                                               signature_id=signature
                                               )
                 email.save()
+                place = EmailPlace.objects.create(user=sender, email=email)
+                place.save()
                 return redirect('draft')
 
 
@@ -421,11 +470,16 @@ def forward_email(request, pk):
                                               is_to=is_to,
                                               signature_id=from_email.signature
                                               )
-                email.receiver_cc.add(*users)
-                email.receiver.add(*users_cc)
-                email.receiver.add(*users_bcc)
-                email.receiver.add(*users_to)
+                email.receiver.add(*users)
+                email.receiver_cc.add(*users_cc)
+                email.receiver_bcc.add(*users_bcc)
+                email.receiver_to.add(*users_to)
                 email.save()
+                for user in users:
+                    place = EmailPlace.objects.create(user=user, email=email)
+                    place.save()
+                place = EmailPlace.objects.create(user=sender, email=email)
+                place.save()
                 return redirect('sent')
             return render(request, 'emails/new_error.html', {'form': form})
 
@@ -439,4 +493,116 @@ def forward_email(request, pk):
                                               signature_id=from_email.signature
                                               )
                 email.save()
+                place = EmailPlace.objects.create(user=sender, email=email)
+                place.save()
                 return redirect('draft')
+
+
+@login_required(redirect_field_name='login')
+def edit_draft(request, pk):
+    if request.method == "POST":
+        sender = User.objects.get(pk=request.user.pk)
+        form = NewEmailForm(request.POST, request.FILES)
+        email = Emails.objects.get(pk=pk)
+        if request.POST.get('signature') != 'None':
+            signature = Signature.objects.get(owner_id=sender.pk,
+                                              text=request.POST.get('signature')).pk
+        else:
+            signature = None
+        if 'email_submit' in request.POST:
+            receivers_to, receivers_bcc, receivers_cc, receivers = [], [], [], []
+            is_to, is_bcc, is_cc = False, False, False
+            if request.POST.get('receiver_to'):
+                receivers = request.POST.get('receiver_to').split(',')
+                receivers_to = request.POST.get('receiver_to').split(',')
+                is_to = True
+            if request.POST.get('receiver_cc'):
+                receivers = receivers + request.POST.get('receiver_cc').split(',')
+                receivers_cc = request.POST.get('receiver_cc').split(',')
+                is_cc = True
+            if request.POST.get('receiver_bcc'):
+                receivers = receivers + request.POST.get('receiver_bcc').split(',')
+                receivers_bcc = request.POST.get('receiver_bcc').split(',')
+                is_bcc = True
+
+            # to find the objects with queryset
+            users_to = User.objects.filter(username__in=receivers_to)
+            users_cc = User.objects.filter(username__in=receivers_cc)
+            users_bcc = User.objects.filter(username__in=receivers_bcc)
+            users = User.objects.filter(username__in=receivers)
+
+            # if there is not any valid registered user within inputs
+            if len(users) == 0:
+                form.add_error('receiver_to', 'There most be at least one valid receiver!')
+                return render(request, 'emails/new_error.html', {'form': form})
+            # to check the valid inputs
+            for user in users:
+                while user.username in receivers:
+                    receivers.remove(user.username)
+            # to return invalid username inputs
+            if len(receivers) > 0:
+                for receiver in receivers:
+                    message = f"user with {receiver} username dose not exist!"
+                    return render(request, 'emails/new_error.html', {'message': message})
+
+            if form.is_valid():
+                email.title = form.cleaned_data['title']
+                print(email.title)
+                email.text = form.cleaned_data['text']
+                email.file = form.cleaned_data['file']
+                email.status = 'send'
+                email.is_bcc = is_bcc
+                email.is_cc = is_cc
+                email.is_to = is_to
+                email.signature_id = signature
+                email.receiver.add(*users)
+                email.receiver_cc.add(*users_cc)
+                email.receiver_bcc.add(*users_bcc)
+                email.receiver_to.add(*users_to)
+                email.save()
+                for user in users:
+                    place = EmailPlace.objects.create(user=user, email=email)
+                    place.save()
+                place = EmailPlace.objects.create(user=sender, email=email)
+                place.save()
+                return redirect('sent')
+            return render(request, 'emails/new_error.html', {'form': form})
+        if 'draft_submit' in request.POST:
+            form = NewEmailForm(request.POST, request.FILES)
+            if form.is_valid() is False or form.is_valid() is True:
+                email.title = form.cleaned_data['title']
+                email.text = form.cleaned_data['text']
+                email.file = form.cleaned_data['file']
+                email.status = 'draft'
+                email.save()
+                place = EmailPlace.objects.create(user=sender, email=email)
+                place.save()
+                return redirect('draft')
+
+
+@login_required(redirect_field_name='login')
+def new_signature(request):
+    if request.method == "POST":
+        text = request.POST.get('text')
+        owner = request.user.pk
+        new_sign = Signature(owner_id=owner,
+                             text=text)
+        new_sign.save()
+        messages.add_message(request, messages.SUCCESS, "The signature added successfully")
+
+        return redirect(request.META.get('HTTP_REFERER'))
+
+
+@login_required(redirect_field_name='login')
+def delete_signature(request):
+    if request.method == "POST":
+        text = request.POST.get('text')
+        owner = request.user.pk
+        if text == "...":
+            messages.add_message(request, messages.SUCCESS, "Select a sign text!")
+            return redirect('inbox')
+
+        sign = Signature.objects.get(owner_id=owner, text=text)
+        sign.delete()
+        messages.add_message(request, messages.SUCCESS, "The sign deleted successfully")
+        return redirect('inbox')

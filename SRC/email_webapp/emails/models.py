@@ -94,7 +94,7 @@ class Emails(models.Model):
     )
     signature = models.ForeignKey(
         Signature,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
@@ -113,8 +113,6 @@ class Emails(models.Model):
         blank=False,
         default=None
     )
-    is_trash = models.BooleanField(default=False)
-    is_archive = models.BooleanField(default=False)
     is_cc = models.BooleanField(default=False)
     is_bcc = models.BooleanField(default=False)
     is_to = models.BooleanField(default=False)
@@ -124,3 +122,10 @@ class Emails(models.Model):
 
     class Meta:
         ordering = ['-pub_date']
+
+
+class EmailPlace(models.Model):
+    email = models.ForeignKey(Emails, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_trash = models.BooleanField(default=False)
+    is_archive = models.BooleanField(default=False)
