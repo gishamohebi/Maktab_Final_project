@@ -1,0 +1,78 @@
+<br>
+<br>
+<div class="btn-group" style="margin-left: +30rem">
+    <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        signatures
+    </button>
+    <ul class="dropdown-menu">
+        {% if labels %}
+            {% for signature in signatures %}
+                <li> {{ signature }}</li>
+
+            {% endfor %}
+        {% endif %}
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item" data-toggle="modal" data-target="#newsignature">Creat new sign</a></li>
+        <li><a class="dropdown-item" data-toggle="modal" data-target="#deletsignature">delete sign</a></li>
+    </ul>
+</div>
+<br>
+<br>
+
+<div id="newsignature" class="modal" role="dialog" style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<form method="post"
+      style="width: 500px;height: auto;background-color: cornflowerblue"
+      action="/gmz-email/new-signature/"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <center>
+        <div style="display: flex;flex-direction: column">
+            <center>
+                <p>New signature</p>
+                <div class="col-xs-4">
+                    <label for="ex2">text</label>
+                    <input class="form-control" id="ex2" type="text" name="text">
+                </div>
+            </center>
+
+        </div>
+    </center>
+    <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+    <button type="submit" data-dismiss="modal" class="btn btn-outline-secondary" name="draft_submit" value="close">
+        cancel
+    </button>
+</form>
+</div>
+
+
+<div id="deletsignature" class="modal" role="dialog"
+     style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<form method="post"
+      style="width: 500px;height: auto;background-color: cornflowerblue"
+      action="/gmz-email/delete-signature/"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <center>
+        <br>
+        <h3>Delete signature</h3>
+        <br>
+        <div style="display: flex;flex-direction: column">
+            <center>
+                <select name="text" style="width: 200px;color: #DC143C;font: 20px">
+                    <option>...</option>
+                    {% for signature in signatures %}
+                        <option>{{ signature }}</option>
+                    {% endfor %}
+                </select>
+            </center>
+        </div>
+    </center>
+    <br>
+    <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+    <button type="submit" data-dismiss="modal" class="btn btn-outline-secondary" name="draft_submit" value="close">
+        cancel
+    </button>
+</form>
+</div>
