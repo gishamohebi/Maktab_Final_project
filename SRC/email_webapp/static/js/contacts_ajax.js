@@ -1,7 +1,7 @@
 const searchField = document.querySelector("#searchField");
-const contactResult = document.querySelector(".contact_ajax_result");
+const emailResult = document.querySelector(".email_ajax_result");
 const listAjax = document.querySelector(".list_ajax");
-contactResult.style.display = "none";
+emailResult.style.display = "none";
 
 const listDisplay = document.querySelector(".list_div");
 const result = document.querySelector(".result");
@@ -22,14 +22,14 @@ searchField.addEventListener('keyup', function (e) {
                 console.log("data", data);
 
                 listDisplay.style.display = "none";
-                contactResult.style.display = "block";
+                emailResult.style.display = "block";
 
                 if (data.length === 0) {
-                    contactResult.innerHTML = "No result!";
+                    emailResult.innerHTML = "No result!";
                 } else {
-                    contactResult.innerHTML = " "
+                    emailResult.innerHTML = " "
                     data.forEach((item) => {
-                        contactResult.style.display = "none"
+                        emailResult.style.display = "none"
                         listAjax.innerHTML +=
 
                             `<li>
@@ -44,8 +44,8 @@ searchField.addEventListener('keyup', function (e) {
             });
 
     } else {
-        result.style.display = "none";
-        contactResult.style.display = "none";
+        listAjax.innerHTML = " "
+        emailResult.style.display = "none";
         listDisplay.style.display = "block";
     }
 

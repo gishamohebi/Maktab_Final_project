@@ -44,7 +44,7 @@ searchField.addEventListener('keyup', function (e) {
             });
 
     } else {
-        result.style.display = "none";
+        listAjax.innerHTML = " "
         emailResult.style.display = "none";
         listDisplay.style.display = "block";
     }

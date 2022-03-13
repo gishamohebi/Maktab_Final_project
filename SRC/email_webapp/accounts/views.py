@@ -397,12 +397,12 @@ def csv_contacts(request):
 def search_contact(request):
     if request.method == 'POST':
         search_str = json.loads(request.body).get('searchText')
-        emails = Contacts.objects.filter(
+        contacts = Contacts.objects.filter(
             Q(owner=request.user),
             Q(name__icontains=search_str) |
             Q(email__icontains=search_str) |
             Q(emails__icontains=search_str) |
             Q(phone__icontains=search_str)
         )
-        data = emails.values()
+        data = contacts.values()
         return JsonResponse(list(data), safe=False)  # safe let to return a not json response
