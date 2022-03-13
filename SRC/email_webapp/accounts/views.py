@@ -1,4 +1,5 @@
 import csv
+import json
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -6,7 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
@@ -23,6 +25,7 @@ from .tokens import account_activation_token
 from utils import send_otp_code, send_recover_link
 from emails.forms import *
 from emails.views import BaseList
+from emails.extera_handeler import creat_draft
 from .forms import *
 
 import random
@@ -371,17 +374,11 @@ def email_contact(request, email):
 
         if 'draft_submit' in request.POST:
             if form.is_valid() is False or form.is_valid() is True:
-                email = Emails.objects.create(sender=sender,
-                                              title=form.cleaned_data['title'],
-                                              text=form.cleaned_data['text'],
-                                              file=form.cleaned_data['file'],
-                                              status='draft',
-                                              signature_id=signature
-                                              )
-                email.save()
+                creat_draft(form, sender, signature)
                 return redirect('draft')
 
 
+@login_required(redirect_field_name='login')
 def csv_contacts(request):
     contacts = list(Contacts.objects.filter(owner=request.user.pk).values())
     response = HttpResponse()
@@ -394,3 +391,18 @@ def csv_contacts(request):
         writer.writerow(contact.values())
 
     return response
+
+
+@login_required(redirect_field_name='login')
+def search_contact(request):
+    if request.method == 'POST':
+        search_str = json.loads(request.body).get('searchText')
+        emails = Contacts.objects.filter(
+            Q(owner=request.user),
+            Q(name__icontains=search_str) |
+            Q(email__icontains=search_str) |
+            Q(emails__icontains=search_str) |
+            Q(phone__icontains=search_str)
+        )
+        data = emails.values()
+        return JsonResponse(list(data), safe=False)  # safe let to return a not json response

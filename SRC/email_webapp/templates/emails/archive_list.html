@@ -7,7 +7,7 @@
 {% endblock %}
 {% block body %}
     <center>
-        {% include "comments/label_message.html" %}
+        {% include "comments/message_layout.html" %}
         <div class="header">
             <h4>
                 Archive
@@ -15,27 +15,37 @@
         </div>
         <br>
         <br>
+        <form>
+            <input type="text" placeholder="Search email" name="searchText" id="searchField" style="color: #DC143C">
+        </form>
         <div style="display:flex;flex-direction:row">
             {% include "layout/_labels.html" %}
             {% include "layout/_signature.html" %}
         </div>
+        <div class="list_div">
+            <ol>
+                {% if object_list %}
+                    {% for email in object_list %}
+                        <li class="">
+                            <a href="/gmz-email/email-detail/{{ email.id }}">
+                                {#                            todo : receiver.name#}
+                                {{ email.title }} - {{ email.pub_date }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                {% endif %}
 
-        <ol>
-            {% if object_list %}
-                {% for email in object_list %}
-                    <li class="">
-                        <a href="/gmz-email/email-detail/{{ email.id }}">
-                            {#                            todo : receiver.name#}
-                            {{ email.title }} - {{ email.pub_date }}
-                        </a>
-                    </li>
-                {% endfor %}
-            {% endif %}
-
-        </ol>
+            </ol>
+        </div>
+        <div class="result">
+            <p class="email_ajax_result"></p>
+            <ol class="list_ajax">
+            </ol>
+        </div>
 
         {% include "emails/new_email.html" %}
         {% include "users/new_contact.html" %}
     </center>
     {% include "layout/_sidebar.html" %}
+    <script src="{% static 'js/email_ajax.js' %}"></script>
 {% endblock %}

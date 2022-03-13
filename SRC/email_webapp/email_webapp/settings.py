@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "emails",
     "accounts",
-    'crispy_forms'
+    'crispy_forms',
     # 'pagedown'
 ]
 

@@ -15,25 +15,35 @@
         </div>
         <br>
         <br>
+        <form>
+            <input type="text" placeholder="Search contact" name="searchText" id="searchField" style="color: #DC143C">
+        </form>
         <div style="display:flex;flex-direction:row">
             {% include "layout/_labels.html" %}
             {% include "layout/_signature.html" %}
         </div>
+        <div class="list_div">
+            <ol>
 
-        <ol>
-            {% if object_list %}
-                {% for person in object_list %}
-                    <li class="">
-                        <a href="/accounts/contact-detail/{{ person.id }}">
-                            {{ person.name }} : {{ person.email }}
-                        </a>
-                    </li>
-                {% endfor %}
-            {% endif %}
+                    {% for person in object_list %}
+                        <li class="">
+                            <a href="/accounts/contact-detail/{{ person.id }}">
+                                {{ person.name }} : {{ person.email }}
+                            </a>
+                        </li>
+                    {% endfor %}
 
-        </ol>
+
+            </ol>
+        </div>
+        <div class="result">
+            <p class="contact_ajax_result"></p>
+            <ol class="list_ajax">
+            </ol>
+        </div>
         {% include "emails/new_email.html" %}
         {% include "users/new_contact.html" %}
     </center>
     {% include "layout/_sidebar.html" %}
+    <script src="{% static 'js/contact_ajax.js' %}"></script>
 {% endblock %}

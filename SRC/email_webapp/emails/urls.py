@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import *
+from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
     path("inbox/", InboxList.as_view(), name="inbox"),
@@ -22,5 +23,6 @@ urlpatterns = [
     path('reply-email/<int:pk>/', reply_email, name="reply_email"),
     path('download-file/<str:filename>/', download_file, name="download_file"),
     path('forward-email/<int:pk>/', forward_email, name="forward_email"),
+    path('search-email/', csrf_exempt(search_email), name="search_email"),
 
 ]
