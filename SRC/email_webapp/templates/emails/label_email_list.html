@@ -8,14 +8,19 @@
 {% endblock %}
 {% block body %}
     <center>
-        {% include "comments/label_message.html" %}
+        {% include "comments/message_layout.html" %}
         <div class="header">
 
             <h4>
                 Inbox
             </h4>
         </div>
-        {% include "layout/_labels.html" %}
+        <br>
+        <br>
+        <div style="display:flex;flex-direction:row">
+            {% include "layout/_labels.html" %}
+            {% include "layout/_signature.html" %}
+        </div>
         <ol>
             {% for email in object_list %}
                 <li class="">

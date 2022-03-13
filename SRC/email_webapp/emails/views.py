@@ -1,10 +1,13 @@
+import json
 import mimetypes
 import os
+from time import strftime
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.decorators import *
@@ -12,6 +15,7 @@ from .forms import *
 from emails.models import Emails
 from accounts.forms import NewContact
 from accounts.models import *
+from .extera_handeler import *
 
 
 class BaseList(LoginRequiredMixin, ListView):
@@ -50,8 +54,7 @@ class SentList(BaseList):
     template_name = 'emails/sent_list.html'
 
     def get_queryset(self):
-        emails = Emails.objects.filter(sender=self.request.user.pk, status="send", )
-        print(len(list(emails)))
+        emails = Emails.objects.filter(sender=self.request.user.pk, status="send")
         for email in emails:
             place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
             for item in place:
@@ -136,8 +139,8 @@ def new_email(request):
 
             # if there is not any valid registered user within inputs
             if len(users) == 0:
-                form.add_error('receiver_to', 'There most be at least one valid receiver!')
-                return render(request, 'emails/new_error.html', {'form': form})
+                messages.add_message(request, messages.ERROR, f"There most be at least one valid username!")
+                return redirect(request.META.get('HTTP_REFERER'))
             # to check the valid inputs
             for user in users:
                 while user.username in receivers:
@@ -145,8 +148,9 @@ def new_email(request):
             # to return invalid username inputs
             if len(receivers) > 0:
                 for receiver in receivers:
-                    message = f"user with {receiver} username dose not exist!"
-                    return render(request, 'emails/new_error.html', {'message': message})
+                    messages.add_message(request, messages.ERROR,
+                                         f"user with {receiver} username dose not exist!")
+                    return redirect(request.META.get('HTTP_REFERER'))
 
             if form.is_valid():
                 email = Emails.objects.create(sender=sender,
@@ -163,27 +167,21 @@ def new_email(request):
                 email.receiver_cc.add(*users_cc)
                 email.receiver_bcc.add(*users_bcc)
                 email.receiver_to.add(*users_to)
-                email.save()
                 for user in users:
                     place = EmailPlace.objects.create(user=user, email=email)
-                    place.save()
                 place = EmailPlace.objects.create(user=sender, email=email)
-                place.save()
+
+                messages.add_message(request, messages.SUCCESS, f"Successfully sent !")
                 return redirect('sent')
-            return render(request, 'emails/new_error.html', {'form': form})
+            messages.add_message(request, messages.ERROR,
+                                 message=form.errors)
+            return redirect(request.META.get('HTTP_REFERER'))
+
         if 'draft_submit' in request.POST:
             form = NewEmailForm(request.POST, request.FILES)
             if form.is_valid() is False or form.is_valid() is True:
-                email = Emails.objects.create(sender=sender,
-                                              title=form.cleaned_data['title'],
-                                              text=form.cleaned_data['text'],
-                                              file=form.cleaned_data['file'],
-                                              status='draft',
-                                              signature_id=signature
-                                              )
-                email.save()
-                place = EmailPlace.objects.create(user=sender, email=email)
-                place.save()
+                creat_draft(form, sender, signature)
+                messages.add_message(request, messages.SUCCESS, f"Draft email! ")
                 return redirect('draft')
 
 
@@ -279,10 +277,13 @@ class LabelEmailList(BaseList):
     def get_queryset(self):
         # the pk is the pk pg the category
         pk = self.kwargs['pk']
-        return Emails.objects.filter(category__id=pk,
-                                     receiver=self.request.user.pk,
-                                     is_archive=False,
-                                     is_trash=False, )
+        emails = Emails.objects.filter(category__id=pk, receiver=self.request.user.pk)
+        for email in emails:
+            place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
+            for item in place:
+                if item.is_trash is True or item.is_archive is True:
+                    emails = emails.exclude(pk=email.pk)
+        return emails
 
 
 @login_required(redirect_field_name='login')
@@ -354,16 +355,7 @@ def reply_email(request, pk):
 
         if 'draft_submit' in request.POST:
             if form.is_valid() is False or form.is_valid() is True:
-                email = Emails.objects.create(sender=sender,
-                                              title=form.cleaned_data['title'],
-                                              text=form.cleaned_data['text'],
-                                              file=form.cleaned_data['file'],
-                                              status='draft',
-                                              signature_id=signature
-                                              )
-                email.save()
-                place = EmailPlace.objects.create(user=sender, email=email)
-                place.save()
+                creat_draft(form, sender, signature)
                 return redirect('draft')
 
 
@@ -547,7 +539,6 @@ def edit_draft(request, pk):
 
             if form.is_valid():
                 email.title = form.cleaned_data['title']
-                print(email.title)
                 email.text = form.cleaned_data['text']
                 email.file = form.cleaned_data['file']
                 email.status = 'send'
@@ -559,12 +550,12 @@ def edit_draft(request, pk):
                 email.receiver_cc.add(*users_cc)
                 email.receiver_bcc.add(*users_bcc)
                 email.receiver_to.add(*users_to)
-                email.save()
+
                 for user in users:
                     place = EmailPlace.objects.create(user=user, email=email)
-                    place.save()
+
                 place = EmailPlace.objects.create(user=sender, email=email)
-                place.save()
+
                 return redirect('sent')
             return render(request, 'emails/new_error.html', {'form': form})
         if 'draft_submit' in request.POST:
@@ -585,9 +576,8 @@ def new_signature(request):
     if request.method == "POST":
         text = request.POST.get('text')
         owner = request.user.pk
-        new_sign = Signature(owner_id=owner,
-                             text=text)
-        new_sign.save()
+        new_sign = Signature.objects.create(owner_id=owner,
+                                            text=text)
         messages.add_message(request, messages.SUCCESS, "The signature added successfully")
 
         return redirect(request.META.get('HTTP_REFERER'))
@@ -602,7 +592,30 @@ def delete_signature(request):
             messages.add_message(request, messages.SUCCESS, "Select a sign text!")
             return redirect('inbox')
 
-        sign = Signature.objects.get(owner_id=owner, text=text)
-        sign.delete()
+        try:
+            sign = Signature.objects.get(owner_id=owner, text=text)
+            sign.delete()
+        except Exception as e:
+            raise e
         messages.add_message(request, messages.SUCCESS, "The sign deleted successfully")
         return redirect('inbox')
+
+
+@login_required(redirect_field_name='login')
+def search_email(request):
+    if request.method == 'POST':
+        search_str = json.loads(request.body).get('searchText')
+        emails = Emails.objects.filter(
+            Q(sender=request.user.pk) | Q(receiver=request.user.pk),
+            Q(title__icontains=search_str) |
+            Q(text__icontains=search_str) |
+            Q(emails__category__title=search_str) |
+            Q(pub_date__istartswith=search_str) |
+            Q(receiver__username__icontains=search_str) |
+            Q(emails__sender__username__icontains=search_str)
+        )
+        data = emails.values()
+        for email in data:
+            email['sender_id'] = User.objects.get(pk=email['sender_id']).username
+            email['pub_date'] = email['pub_date'].date()
+        return JsonResponse(list(data), safe=False)  # safe let to return a not json response

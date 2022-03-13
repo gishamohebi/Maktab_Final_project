@@ -1,3 +1,5 @@
+from django.views.decorators.csrf import csrf_exempt
+
 from .views import *
 from django.urls import path
 
@@ -17,5 +19,6 @@ urlpatterns = [
     path("delete-contact/<int:pk>/", delete_contact, name="delete_contact"),
     path('contact-new-email/<str:email>/', email_contact, name='email_contact'),
     path('csv-contacts/', csv_contacts, name='csv_contacts'),
+    path('search-contact/', csrf_exempt(search_contact), name='search-contact'),
 
 ]

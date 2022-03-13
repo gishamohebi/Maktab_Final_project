@@ -1,0 +1,14 @@
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-primary" id="message"  role="alert"
+             style="color: #DC143C;width:300px">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<script>
+    setTimeout(function () {
+        $('#message').fadeOut('fast');
+    },5000); // <-- time in milliseconds
+</script>
