@@ -12,10 +12,54 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.decorators import *
 from .forms import *
-from emails.models import Emails
 from accounts.forms import NewContact
 from accounts.models import *
 from .extera_handeler import *
+
+
+def find_filter_emails(request, emails):
+    for email in emails:
+        filters = FilterInfo.objects.filter(Q(username__username=email.sender) |
+                                            Q(subject=email.title),
+                                            owner=request.user,
+                                            )
+        if filters:
+            for tag in filters:
+                if tag.label is None:
+                    if tag.is_archive is True:
+                        label = 'archive'
+                    elif tag.is_trash is True:
+                        label = 'trash'
+                else:
+                    label = tag.label
+                filter_email_status = FilterEmailStatus.objects.filter(email=email,
+                                                                       label=label,
+                                                                       filter_user_id=request.user.id
+                                                                       )
+                if not filter_email_status:
+                    filter_email_status = FilterEmailStatus.objects.create(email=email,
+                                                                           is_filter=True,
+                                                                           active_label=True,
+                                                                           label=label,
+                                                                           filter_user_id=request.user.id
+                                                                           )
+                    if label == "trash":
+                        places = EmailPlace.objects.filter(email=email.pk, user=request.user.pk)
+                        for place in places:
+                            place.is_trash = True
+                            place.save()
+
+                    elif label == "archive":
+                        places = EmailPlace.objects.filter(email=email.pk, user=request.user.pk)
+                        for place in places:
+                            place.is_archive = True
+                            place.save()
+
+                    else:
+                        cat = Category.objects.get(title=label,owner=request.user)
+                        email.category.add(cat)
+
+    return emails
 
 
 class BaseList(LoginRequiredMixin, ListView):
@@ -28,6 +72,7 @@ class BaseList(LoginRequiredMixin, ListView):
         context = super(BaseList, self).get_context_data(**kwargs)
         context['form1'] = NewEmailForm()
         context['form2'] = NewContact()
+        context['form3'] = FilterForm()
         signatures = Signature.objects.filter(owner__id=self.request.user.pk)
         context['signatures'] = signatures
         context['labels'] = Category.objects.filter(owner_id=self.request.user.pk)
@@ -40,11 +85,21 @@ class InboxList(BaseList):
 
     def get_queryset(self):
         emails = Emails.objects.filter(receiver=self.request.user.pk)
+        emails = find_filter_emails(request=self.request, emails=emails)
+
         for email in emails:
+
             place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
             for item in place:
                 if item.is_trash or item.is_archive is True:
                     emails = emails.exclude(pk=email.pk)
+
+        for email in emails:
+            filter_email_status = FilterEmailStatus.objects.filter(email=email.pk)
+            for status in filter_email_status:
+                if status.active_label is True:
+                    emails = emails.exclude(pk=email.pk)
+
         return emails
 
 
@@ -173,6 +228,7 @@ def new_email(request):
 
                 messages.add_message(request, messages.SUCCESS, f"Successfully sent !")
                 return redirect('sent')
+
             messages.add_message(request, messages.ERROR,
                                  message=form.errors)
             return redirect(request.META.get('HTTP_REFERER'))
@@ -199,7 +255,8 @@ class EmailDetail(LoginRequiredMixin, DetailView):
         context['labels'] = Category.objects.filter(owner_id=self.request.user.pk)
 
         if context['email'].category:
-            context['email_labels'] = list(context.get('email').category.filter().values_list('title', flat=True))
+            context['email_labels'] = list(
+                context['email'].category.filter(owner_id=self.request.user.pk).values_list('title', flat=True))
 
         if context['email'].reply_to:
             email_parent = Emails.objects.get(pk=context['email'].reply_to.pk)
@@ -236,7 +293,8 @@ class EmailDetail(LoginRequiredMixin, DetailView):
 
         if context['email'].is_cc is True:
             if self.request.user.username in receivers_cc:
-                context['people'] = list(context.get('email').receiver_cc.filter().values_list('username', flat=True))
+                context['people'] = list(
+                    context.get('email').receiver_cc.filter().values_list('username', flat=True))
                 return context
 
 
@@ -245,12 +303,20 @@ def check_archive(request, pk):
     if request.method == "GET":
         email = Emails.objects.get(pk=pk)
         places = EmailPlace.objects.filter(user=request.user.pk, email=email.pk)
+
         for place in places:
             if place.is_archive is False:
                 place.is_archive = True
             elif place.is_archive is True:
                 place.is_archive = False
             place.save(update_fields=['is_archive'])
+
+        find_filter_labels = FilterEmailStatus.objects.filter(email=email.pk, label='archive')
+        if find_filter_labels:
+            for item in find_filter_labels:
+                item.active_label = False
+                item.save()
+
         return redirect('archive')
 
 
@@ -267,6 +333,13 @@ def check_trash(request, pk):
                 place.is_trash = False
                 print(place)
             place.save(update_fields=['is_trash'])
+
+        find_filter_labels = FilterEmailStatus.objects.filter(email=email.pk, label='trash')
+        if find_filter_labels:
+            for item in find_filter_labels:
+                item.active_label = False
+                item.save()
+
         return redirect('trash')
 
 
@@ -278,11 +351,14 @@ class LabelEmailList(BaseList):
         # the pk is the pk pg the category
         pk = self.kwargs['pk']
         emails = Emails.objects.filter(category__id=pk, receiver=self.request.user.pk)
+        filters = Emails.objects.filter(receiver=self.request.user.pk)
+
         for email in emails:
             place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
             for item in place:
                 if item.is_trash is True or item.is_archive is True:
                     emails = emails.exclude(pk=email.pk)
+
         return emails
 
 
@@ -347,9 +423,7 @@ def reply_email(request, pk):
                 email.save()
 
                 place = EmailPlace.objects.create(user=sender, email=email)
-                place.save()
                 place = EmailPlace.objects.create(user=receiver_to, email=email)
-                place.save()
                 return redirect('sent')
             return render(request, 'emails/new_error.html', {'form': form})
 
@@ -385,6 +459,13 @@ def remove_from_label(request, pk):
             return redirect(request.META.get('HTTP_REFERER'))
         cat = Category.objects.get(owner_id=owner, title=title)
         email.category.remove(cat.pk)
+
+        find_filter_labels = FilterEmailStatus.objects.filter(email=email.pk, label=title)
+        if find_filter_labels:
+            for item in find_filter_labels:
+                item.active_label = False
+                item.save()
+
         messages.add_message(request, messages.SUCCESS, "Successfully removed from label list!")
         return redirect(request.META.get('HTTP_REFERER'))
 
@@ -439,8 +520,8 @@ def forward_email(request, pk):
             users = User.objects.filter(username__in=receivers)
 
             if len(users) == 0:
-                form.add_error('receiver_to', 'There most be at least one valid receiver!')
-                return render(request, 'emails/new_error.html', {'form': form})
+                messages.add_message(request, messages.ERROR, f"There most be at least one valid username!")
+                return redirect(request.META.get('HTTP_REFERER'))
 
             for user in users:
                 while user.username in receivers:
@@ -448,8 +529,9 @@ def forward_email(request, pk):
 
             if len(receivers) > 0:
                 for receiver in receivers:
-                    message = f"user with {receiver} username dose not exist!"
-                    return render(request, 'emails/new_error.html', {'message': message})
+                    messages.add_message(request, messages.ERROR,
+                                         f"user with {receiver} username dose not exist!")
+                    return redirect(request.META.get('HTTP_REFERER'))
 
             if form.is_valid():
                 email = Emails.objects.create(sender=sender,
@@ -466,14 +548,17 @@ def forward_email(request, pk):
                 email.receiver_cc.add(*users_cc)
                 email.receiver_bcc.add(*users_bcc)
                 email.receiver_to.add(*users_to)
-                email.save()
+
                 for user in users:
                     place = EmailPlace.objects.create(user=user, email=email)
-                    place.save()
+
                 place = EmailPlace.objects.create(user=sender, email=email)
-                place.save()
+
+                messages.add_message(request, messages.SUCCESS, f"Successfully sent !")
                 return redirect('sent')
-            return render(request, 'emails/new_error.html', {'form': form})
+            messages.add_message(request, messages.ERROR,
+                                 message=form.errors)
+            return redirect(request.META.get('HTTP_REFERER'))
 
         if 'draft_submit' in request.POST:
             if form.is_valid() is False or form.is_valid() is True:
@@ -487,6 +572,7 @@ def forward_email(request, pk):
                 email.save()
                 place = EmailPlace.objects.create(user=sender, email=email)
                 place.save()
+                messages.add_message(request, messages.SUCCESS, f"Draft email! ")
                 return redirect('draft')
 
 
@@ -525,8 +611,8 @@ def edit_draft(request, pk):
 
             # if there is not any valid registered user within inputs
             if len(users) == 0:
-                form.add_error('receiver_to', 'There most be at least one valid receiver!')
-                return render(request, 'emails/new_error.html', {'form': form})
+                messages.add_message(request, messages.ERROR, f"There most be at least one valid username!")
+                return redirect(request.META.get('HTTP_REFERER'))
             # to check the valid inputs
             for user in users:
                 while user.username in receivers:
@@ -534,8 +620,9 @@ def edit_draft(request, pk):
             # to return invalid username inputs
             if len(receivers) > 0:
                 for receiver in receivers:
-                    message = f"user with {receiver} username dose not exist!"
-                    return render(request, 'emails/new_error.html', {'message': message})
+                    messages.add_message(request, messages.ERROR,
+                                         f"user with {receiver} username dose not exist!")
+                    return redirect(request.META.get('HTTP_REFERER'))
 
             if form.is_valid():
                 email.title = form.cleaned_data['title']
@@ -556,8 +643,14 @@ def edit_draft(request, pk):
 
                 place = EmailPlace.objects.create(user=sender, email=email)
 
-                return redirect('sent')
-            return render(request, 'emails/new_error.html', {'form': form})
+                messages.add_message(request, messages.ERROR,
+                                     message=form.errors)
+                return redirect(request.META.get('HTTP_REFERER'))
+
+            messages.add_message(request, messages.ERROR,
+                                 message=form.errors)
+            return redirect(request.META.get('HTTP_REFERER'))
+
         if 'draft_submit' in request.POST:
             form = NewEmailForm(request.POST, request.FILES)
             if form.is_valid() is False or form.is_valid() is True:
@@ -568,6 +661,7 @@ def edit_draft(request, pk):
                 email.save()
                 place = EmailPlace.objects.create(user=sender, email=email)
                 place.save()
+                messages.add_message(request, messages.SUCCESS, f"Draft email! ")
                 return redirect('draft')
 
 
@@ -618,4 +712,57 @@ def search_email(request):
         for email in data:
             email['sender_id'] = User.objects.get(pk=email['sender_id']).username
             email['pub_date'] = email['pub_date'].date()
+        print(data)
         return JsonResponse(list(data), safe=False)  # safe let to return a not json response
+
+
+@login_required(redirect_field_name='login')
+def new_filter(request):
+    if request.method == "POST":
+        form = FilterForm(request.POST)
+
+        if request.POST.get('label') == '...':
+            messages.add_message(request, messages.ERROR,
+                                 message="You must select a label")
+            return redirect(request.META.get('HTTP_REFERER'))
+
+        if request.POST.get('username'):
+            if form.is_valid() is False:
+                messages.add_message(request, messages.ERROR,
+                                     message=form.errors)
+                return redirect(request.META.get('HTTP_REFERER'))
+
+            username = User.objects.get(username=form.cleaned_data['username'])
+
+            if username:
+                pass
+            else:
+                messages.add_message(request, messages.ERROR,
+                                     message="username dose not exist")
+                return redirect(request.META.get('HTTP_REFERER'))
+
+        else:
+            username = None
+
+        if form.is_valid():
+            if request.POST.get('label') != "trash":
+                cat = Category.objects.get(title=request.POST.get('label'),owner=request.user)
+                is_trash = False
+                is_archive = False
+            else:
+                cat = None
+                is_trash = True
+                is_archive = False
+
+            new_filter = FilterInfo.objects.create(
+                owner=request.user,
+                username=username,
+                subject=form.cleaned_data['subject'],
+                label=cat,
+                is_trash=is_trash,
+                is_archive=is_archive
+            )
+
+            messages.add_message(request, messages.ERROR,
+                                 message="Filter added successfully")
+            return redirect(request.META.get('HTTP_REFERER'))

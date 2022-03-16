@@ -24,5 +24,6 @@ urlpatterns = [
     path('download-file/<str:filename>/', download_file, name="download_file"),
     path('forward-email/<int:pk>/', forward_email, name="forward_email"),
     path('search-email/', csrf_exempt(search_email), name="search_email"),
+    path('new-filter/', new_filter, name="new_filter"),
 
 ]

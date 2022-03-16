@@ -1,0 +1,41 @@
+{% load crispy_forms_tags %}
+<div id="filter" class="modal" role="dialog"
+     style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
+<form method="post"
+      style="width: 500px;height: auto;background-color: cornflowerblue"
+      action="/gmz-email/new-filter/"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <center>
+        <div style="display: flex;flex-direction: column">
+            <p>New Filter</p>
+
+            {{ form3|crispy }}
+
+            <h3>Select Lable</h3>
+            <br>
+            <br>
+            <div style="display: flex;flex-direction: column;">
+                <center>
+
+                    <select name="label" style="width: 200px;color: #DC143C;font: 20px">
+                        <option>...</option>
+                        <option>trash</option>
+                        <option>archive</option>
+                        {% for label in labels %}
+                            <option>{{ label }}</option>
+                        {% endfor %}
+                        <hr style="color: #DC143C">
+                    </select>
+                </center>
+            </div>
+
+        </div>
+    </center>
+    <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
+    <button type="submit" data-dismiss="modal" class="btn btn-outline-secondary" name="draft_submit" value="close">
+        close
+    </button>
+</form>
+</div>

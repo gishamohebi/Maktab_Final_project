@@ -125,7 +125,26 @@ class Emails(models.Model):
 
 
 class EmailPlace(models.Model):
-    email = models.ForeignKey(Emails, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    email = models.ForeignKey(Emails, on_delete=models.CASCADE, null=False, blank=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, blank=False)
     is_trash = models.BooleanField(default=False)
     is_archive = models.BooleanField(default=False)
+
+
+class FilterInfo(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False, blank=False, related_name='filter_owner')
+    username = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True,
+                                 related_name='filter_username')
+    subject = models.CharField(max_length=50, blank=True, null=True)
+    label = models.ForeignKey(Category, on_delete=models.CASCADE,null=True)
+    is_trash = models.BooleanField(default=False)
+    is_archive = models.BooleanField(default=False)
+
+
+class FilterEmailStatus(models.Model):
+    email = models.ForeignKey(Emails, on_delete=models.CASCADE, null=False, blank=False)
+    filter_user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, blank=False, default=None)
+    is_filter = models.BooleanField(default=False)
+    active_label = models.BooleanField(default=False)
+    label = models.CharField(max_length=100, null=False, blank=True)
+
