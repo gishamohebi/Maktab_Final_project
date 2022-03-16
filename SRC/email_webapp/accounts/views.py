@@ -366,9 +366,8 @@ def email_contact(request, email):
                 email.receiver_to.add(receiver)
                 email.save()
                 place = EmailPlace.objects.create(user=sender, email=email)
-                place.save()
                 place = EmailPlace.objects.create(user=receiver, email=email)
-                place.save()
+
                 return redirect('sent')
             return render(request, 'emails/new_error.html', {'form': form})
 

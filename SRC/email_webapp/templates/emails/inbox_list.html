@@ -22,9 +22,10 @@
 
         <div style="display:flex;flex-direction:row">
             {% include "layout/_labels.html" %}
+
             {% include "layout/_signature.html" %}
         </div>
-
+        <button data-toggle="modal" data-target="#filter" type="submit" style="background-color: #DC143C;">Filter</button>
         <div class="list_div">
             <ol>
                 {% for email in object_list %}
@@ -44,8 +45,10 @@
         </div>
         {% include "emails/new_email.html" %}
         {% include "users/new_contact.html" %}
+        {% include "emails/filter_form.html" %}
     </center>
 
     {% include "layout/_sidebar.html" %}
-        <script src="{% static 'js/email_ajax.js' %}"></script>
+    <script src="{% static 'js/email_ajax.js' %}"></script>
+
 {% endblock %}
