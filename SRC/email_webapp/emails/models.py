@@ -94,7 +94,7 @@ class Emails(models.Model):
     )
     signature = models.ForeignKey(
         Signature,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
