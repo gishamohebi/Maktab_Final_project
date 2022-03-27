@@ -117,6 +117,11 @@ class Emails(models.Model):
     is_bcc = models.BooleanField(default=False)
     is_to = models.BooleanField(default=False)
 
+    @property
+    def get_file_size(self):
+        if self.file and hasattr(self.file , 'size'):
+            return self.file.size
+
     def __str__(self):
         return self.status
 

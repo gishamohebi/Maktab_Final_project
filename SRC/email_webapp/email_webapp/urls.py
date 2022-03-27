@@ -20,6 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include("accounts.urls")),
     path('accounts/', include("accounts.urls")),
-    path('gmz-email/', include("emails.urls"))
-
+    path('gmz-email/', include("emails.urls")),
 ]

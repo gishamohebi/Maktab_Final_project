@@ -1,7 +1,8 @@
 import json
 import mimetypes
 import os
-from time import strftime
+import sys
+
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -81,6 +82,13 @@ class BaseList(LoginRequiredMixin, ListView):
         context['form1'] = NewEmailForm()
         context['form2'] = NewContact()
         context['form3'] = FilterForm()
+        email = Emails.objects.filter(Q(sender=self.request.user) | Q(receiver=self.request.user))
+        w = Contacts.objects.filter(owner=self.request.user)
+        m = 0
+        for i in email:
+            print((sys.getsizeof(i), i.pk))
+            m += m.__sizeof__()
+        print(m)
         signatures = Signature.objects.filter(owner__id=self.request.user.pk)
         context['signatures'] = signatures
         context['labels'] = Category.objects.filter(owner_id=self.request.user.pk)
@@ -136,7 +144,7 @@ class DraftList(BaseList):
             for item in place:
                 if item.is_trash or item.is_archive is True:
                     emails = emails.exclude(pk=email.pk)
-        return emailss
+        return emails
 
 
 class TrashList(BaseList):
@@ -146,12 +154,6 @@ class TrashList(BaseList):
     def get_queryset(self):
         emails = Emails.objects.filter(Q(sender=self.request.user.pk) | Q(receiver=self.request.user.pk))
         emails = find_filter_emails(request=self.request, emails=emails)
-
-        for email in emails:
-            filter_email_status = FilterEmailStatus.objects.filter(email=email.pk)
-            for status in filter_email_status:
-                if status.active_label is True and status.label != 'trash':
-                    emails = emails.exclude(pk=email.pk)
 
         for email in emails:
             place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
@@ -764,7 +766,12 @@ def new_filter(request):
                 return redirect(request.META.get('HTTP_REFERER'))
 
         else:
-            username = None
+            if request.POST.get('subject'):
+                username = None
+            else:
+                messages.add_message(request, messages.ERROR,
+                                     message="Select at least one field!")
+                return redirect(request.META.get('HTTP_REFERER'))
 
         if form.is_valid():
             filter_both = False
