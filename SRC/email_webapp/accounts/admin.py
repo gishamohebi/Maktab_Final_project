@@ -49,7 +49,6 @@ class UserAdmin(admin.ModelAdmin):
             files_of_user = emails_with_file.filter(sender_id=user.id)
             total = sum(int(objects.get_file_size) for objects in files_of_user)
             file_data.append({"user": user.username, "user_size": total})
-        print(file_data)
 
         chart_data = (
             User.objects.annotate(date=TruncMonth("date_joined"))

@@ -83,12 +83,6 @@ class BaseList(LoginRequiredMixin, ListView):
         context['form2'] = NewContact()
         context['form3'] = FilterForm()
         email = Emails.objects.filter(Q(sender=self.request.user) | Q(receiver=self.request.user))
-        w = Contacts.objects.filter(owner=self.request.user)
-        m = 0
-        for i in email:
-            print((sys.getsizeof(i), i.pk))
-            m += m.__sizeof__()
-        print(m)
         signatures = Signature.objects.filter(owner__id=self.request.user.pk)
         context['signatures'] = signatures
         context['labels'] = Category.objects.filter(owner_id=self.request.user.pk)
