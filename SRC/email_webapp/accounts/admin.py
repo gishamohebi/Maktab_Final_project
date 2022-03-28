@@ -16,26 +16,25 @@ admin.site.register(Contacts)
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("username", "send_emails", "received_emails" , "used_storage")
+    list_display = ("username", "send_emails", "received_emails", "used_storage")
 
     readonly_fields = ("send_emails", "received_emails")
 
-    # fields = readonly_fields
-
-    # list_filter = ("username",)
-
-    def send_emails(self, obj):
+    @staticmethod
+    def send_emails(obj):
         from django.db.models import Avg
         result = Emails.objects.filter(sender=obj).count()
         return result
 
-    def received_emails(self, obj):
+    @staticmethod
+    def received_emails(obj):
         from django.db.models import Avg
         result = Emails.objects.filter(receiver=obj).count()
         return result
 
-    def used_storage(self,obj):
-        emails_with_files = Emails.objects.filter(sender=obj).exclude(file=None,file__isnull=False)
+    @staticmethod
+    def used_storage(obj):
+        emails_with_files = Emails.objects.filter(sender=obj).exclude(file=None, file__isnull=False)
         storage = sum(int(email.get_file_size) for email in emails_with_files if email.get_file_size)
         return storage
 
