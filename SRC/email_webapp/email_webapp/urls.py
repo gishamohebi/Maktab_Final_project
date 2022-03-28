@@ -21,4 +21,5 @@ urlpatterns = [
     path('', include("accounts.urls")),
     path('accounts/', include("accounts.urls")),
     path('gmz-email/', include("emails.urls")),
+    path('api-auth/', include('project_api.urls'))
 ]
