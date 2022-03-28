@@ -16,7 +16,7 @@ admin.site.register(Contacts)
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("username", "send_emails", "received_emails")
+    list_display = ("username", "send_emails", "received_emails" , "used_storage")
 
     readonly_fields = ("send_emails", "received_emails")
 
@@ -33,6 +33,11 @@ class UserAdmin(admin.ModelAdmin):
         from django.db.models import Avg
         result = Emails.objects.filter(receiver=obj).count()
         return result
+
+    def used_storage(self,obj):
+        emails_with_files = Emails.objects.filter(sender=obj).exclude(file=None,file__isnull=False)
+        storage = sum(int(email.get_file_size) for email in emails_with_files if email.get_file_size)
+        return storage
 
     def changelist_view(self, request, extra_context=None):
         # Aggregate new subscribers per month
