@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,7 +39,9 @@ INSTALLED_APPS = [
     "emails",
     "accounts",
     'crispy_forms',
+
     # 'pagedown'
+
 ]
 
 MIDDLEWARE = [
@@ -77,6 +80,7 @@ WSGI_APPLICATION = 'email_webapp.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
+
         'NAME': 'email_webapp_final',
         'USER': 'postgres',
         'PASSWORD': '3912',
@@ -130,7 +134,6 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'gisha.mohebi@gmail.com'
 EMAIL_HOST_PASSWORD = 'yxqbdczacqvdruxw'
 EMAIL_PORT = 587
-AUTH_USER_MODEL = 'accounts.User'
-
+AUTH_USER_MODEL = 'accounts.user'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

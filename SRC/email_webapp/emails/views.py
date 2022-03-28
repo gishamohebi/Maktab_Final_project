@@ -1,7 +1,8 @@
 import json
 import mimetypes
 import os
-from time import strftime
+import sys
+
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -25,13 +26,21 @@ def find_filter_emails(request, emails):
                                             )
         if filters:
             for tag in filters:
-                if tag.label is None:
-                    if tag.is_archive is True:
-                        label = 'archive'
-                    elif tag.is_trash is True:
-                        label = 'trash'
+                if tag.filter_both is True:
+                    filters = FilterInfo.objects.filter(Q(username__username=email.sender),
+                                                        Q(subject=email.title),
+                                                        owner=request.user,
+                                                        )
                 else:
-                    label = tag.label
+                    filters = FilterInfo.objects.filter(Q(username__username=email.sender) |
+                                                        Q(subject=email.title),
+                                                        owner=request.user,
+                                                        )
+
+        if filters:
+
+            for tag in filters:
+                label = tag.label
                 filter_email_status = FilterEmailStatus.objects.filter(email=email,
                                                                        label=label,
                                                                        filter_user_id=request.user.id
@@ -56,7 +65,7 @@ def find_filter_emails(request, emails):
                             place.save()
 
                     else:
-                        cat = Category.objects.get(title=label,owner=request.user)
+                        cat = Category.objects.get(title=label, owner=request.user)
                         email.category.add(cat)
 
     return emails
@@ -73,6 +82,7 @@ class BaseList(LoginRequiredMixin, ListView):
         context['form1'] = NewEmailForm()
         context['form2'] = NewContact()
         context['form3'] = FilterForm()
+        email = Emails.objects.filter(Q(sender=self.request.user) | Q(receiver=self.request.user))
         signatures = Signature.objects.filter(owner__id=self.request.user.pk)
         context['signatures'] = signatures
         context['labels'] = Category.objects.filter(owner_id=self.request.user.pk)
@@ -88,16 +98,15 @@ class InboxList(BaseList):
         emails = find_filter_emails(request=self.request, emails=emails)
 
         for email in emails:
-
-            place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
-            for item in place:
-                if item.is_trash or item.is_archive is True:
-                    emails = emails.exclude(pk=email.pk)
-
-        for email in emails:
             filter_email_status = FilterEmailStatus.objects.filter(email=email.pk)
             for status in filter_email_status:
                 if status.active_label is True:
+                    emails = emails.exclude(pk=email.pk)
+
+        for email in emails:
+            place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
+            for item in place:
+                if item.is_trash or item.is_archive is True:
                     emails = emails.exclude(pk=email.pk)
 
         return emails
@@ -138,6 +147,8 @@ class TrashList(BaseList):
 
     def get_queryset(self):
         emails = Emails.objects.filter(Q(sender=self.request.user.pk) | Q(receiver=self.request.user.pk))
+        emails = find_filter_emails(request=self.request, emails=emails)
+
         for email in emails:
             place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
             for item in place:
@@ -152,6 +163,14 @@ class ArchiveList(BaseList):
 
     def get_queryset(self):
         emails = Emails.objects.filter(Q(sender=self.request.user.pk) | Q(receiver=self.request.user.pk))
+        emails = find_filter_emails(request=self.request, emails=emails)
+
+        for email in emails:
+            filter_email_status = FilterEmailStatus.objects.filter(email=email.pk)
+            for status in filter_email_status:
+                if status.active_label is True and status.label != 'archive':
+                    emails = emails.exclude(pk=email.pk)
+
         for email in emails:
             place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
             for item in place:
@@ -712,7 +731,6 @@ def search_email(request):
         for email in data:
             email['sender_id'] = User.objects.get(pk=email['sender_id']).username
             email['pub_date'] = email['pub_date'].date()
-        print(data)
         return JsonResponse(list(data), safe=False)  # safe let to return a not json response
 
 
@@ -742,25 +760,26 @@ def new_filter(request):
                 return redirect(request.META.get('HTTP_REFERER'))
 
         else:
-            username = None
+            if request.POST.get('subject'):
+                username = None
+            else:
+                messages.add_message(request, messages.ERROR,
+                                     message="Select at least one field!")
+                return redirect(request.META.get('HTTP_REFERER'))
 
         if form.is_valid():
-            if request.POST.get('label') != "trash":
-                cat = Category.objects.get(title=request.POST.get('label'),owner=request.user)
-                is_trash = False
-                is_archive = False
-            else:
-                cat = None
-                is_trash = True
-                is_archive = False
+            filter_both = False
+            if username is not None:
+                if form.cleaned_data['subject'] is not '':
+                    filter_both = True
 
             new_filter = FilterInfo.objects.create(
                 owner=request.user,
                 username=username,
                 subject=form.cleaned_data['subject'],
-                label=cat,
-                is_trash=is_trash,
-                is_archive=is_archive
+                label=request.POST.get('label'),
+                filter_both=filter_both
+
             )
 
             messages.add_message(request, messages.ERROR,

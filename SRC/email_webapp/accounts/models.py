@@ -97,7 +97,7 @@ class Contacts(models.Model):
         validators=[valid_contact]
     )
     name = models.CharField(
-        max_length=100,
+        max_length=120,
         null=False,
         blank=False
     )

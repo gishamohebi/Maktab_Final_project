@@ -117,6 +117,11 @@ class Emails(models.Model):
     is_bcc = models.BooleanField(default=False)
     is_to = models.BooleanField(default=False)
 
+    @property
+    def get_file_size(self):
+        if self.file and hasattr(self.file , 'size'):
+            return self.file.size
+
     def __str__(self):
         return self.status
 
@@ -136,9 +141,8 @@ class FilterInfo(models.Model):
     username = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True,
                                  related_name='filter_username')
     subject = models.CharField(max_length=50, blank=True, null=True)
-    label = models.ForeignKey(Category, on_delete=models.CASCADE,null=True)
-    is_trash = models.BooleanField(default=False)
-    is_archive = models.BooleanField(default=False)
+    label = models.CharField(max_length=100)
+    filter_both = models.BooleanField(default=False)
 
 
 class FilterEmailStatus(models.Model):
@@ -147,4 +151,5 @@ class FilterEmailStatus(models.Model):
     is_filter = models.BooleanField(default=False)
     active_label = models.BooleanField(default=False)
     label = models.CharField(max_length=100, null=False, blank=True)
+
 
