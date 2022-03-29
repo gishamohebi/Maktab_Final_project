@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     "emails",
     "accounts",
     'crispy_forms',
-    'rest_framework'
+    'rest_framework',
+    "rest_framework.authtoken"
 
     # 'pagedown'
 
@@ -55,12 +56,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         'rest_framework.authentication.BasicAuthentication',
-#         'rest_framework.authentication.SessionAuthentication',
-#     ]
-# }
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',)
+}
 
 ROOT_URLCONF = 'email_webapp.urls'
 

@@ -63,7 +63,6 @@ class UserAdmin(admin.ModelAdmin):
 
         # Serialize and attach the chart data to the template context
         as_json = json.dumps(list(chart_data), cls=DjangoJSONEncoder)
-        print(as_json)
         extra_context = extra_context or {"new_users_chart": as_json, 'file_data': file_data}
 
         # Call the superclass changelist_view to render the page
