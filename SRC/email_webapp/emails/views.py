@@ -367,7 +367,7 @@ class LabelEmailList(BaseList):
     template_name = 'emails/label_email_list.html'
 
     def get_queryset(self):
-        # the pk is the pk pg the category
+        # the pk is the pk of the category
         pk = self.kwargs['pk']
         emails = Emails.objects.filter(category__id=pk, receiver=self.request.user.pk)
         filters = Emails.objects.filter(receiver=self.request.user.pk)
@@ -376,7 +376,12 @@ class LabelEmailList(BaseList):
             place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
             for item in place:
                 if item.is_trash is True or item.is_archive is True:
-                    emails = emails.exclude(pk=email.pk)
+                    status = FilterEmailStatus.objects.filter(email=email,filter_user=self.request.user)
+                    for stat in status:
+                        if stat.active_label is True:
+                            pass
+                        else:
+                            emails = emails.exclude(pk=email.pk)
 
         return emails
 

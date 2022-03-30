@@ -1,5 +1,4 @@
 {% load crispy_forms_tags %}
-
 <div id="newemailModal" class="modal" role="dialog"
      style="color: red; #5B42F3;margin-top: 10px; align-items: center"">
 <form method="post"
@@ -9,10 +8,11 @@
     {% csrf_token %}
 
     <center>
-        <div style="display: flex;flex-direction: column">
+        <div style="display: flex;flex-direction: column;">
             <p>New email</p>
 
-            {{ form1|crispy }}
+
+            {{ form1 }}
             <label>Signature</label>
             <select name="signature">
                 <option value="None">None</option>
@@ -26,7 +26,7 @@
     <input type="submit" name="email_submit" class="btn btn-outline-success" value="submit">
     <input type="submit" class="btn btn-outline-secondary" name="draft_submit" value="close">
 </form>
-<script src="https://cdn.ckeditor.com/4.18.0/standard/ckeditor.js">
+
 
 </script>
 </div>
