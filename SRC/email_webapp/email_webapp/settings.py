@@ -148,3 +148,10 @@ EMAIL_PORT = 587
 AUTH_USER_MODEL = 'accounts.user'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CKEDITOR_CONFIGS = {
+    'default': {
+
+        'height': 300,
+        'width': 500,
+    },
+}
