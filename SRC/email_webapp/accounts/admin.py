@@ -3,7 +3,7 @@ import os
 import sys
 
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.db.models.functions import TruncMonth
 
 from .models import *
@@ -45,12 +45,14 @@ class UserAdmin(admin.ModelAdmin):
         usernames = []
         for email in emails_with_file:
             usernames.append(User.objects.get(pk=email.sender_id))
+            for receiver in email.receiver.filter():
+                usernames.append(User.objects.get(pk=receiver.id))
         usernames = set(usernames)
         usernames = list(usernames)
 
         file_data = []
         for user in usernames:
-            files_of_user = emails_with_file.filter(sender_id=user.id)
+            files_of_user = emails_with_file.filter(Q(sender_id=user.id) | Q(receiver=user))
             total = sum(int(objects.get_file_size) for objects in files_of_user)
             file_data.append({"user": user.username, "user_size": total})
 
@@ -63,7 +65,6 @@ class UserAdmin(admin.ModelAdmin):
 
         # Serialize and attach the chart data to the template context
         as_json = json.dumps(list(chart_data), cls=DjangoJSONEncoder)
-        print(as_json)
         extra_context = extra_context or {"new_users_chart": as_json, 'file_data': file_data}
 
         # Call the superclass changelist_view to render the page

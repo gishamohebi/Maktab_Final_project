@@ -145,18 +145,18 @@
             });
         });
 
-
     </script>
 
 
 {% endblock %}
 
 {% block content %}
+
+    <!-- Render the rest of the ChangeList view -->
+    {{ block.super }}
     <!-- Render our chart -->
     <div style="width: 80%;">
         <canvas style="margin-bottom: 30px; width: 60%; height: 100px;" id="myChart"></canvas>
         <canvas style="margin-bottom: 30px; width: 60%; height: 100px;" id="myChart1"></canvas>
     </div>
-    <!-- Render the rest of the ChangeList view -->
-    {{ block.super }}
 {% endblock %}

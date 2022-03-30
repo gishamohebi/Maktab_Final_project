@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     "emails",
     "accounts",
     'crispy_forms',
-    'rest_framework'
+    'rest_framework',
+    "rest_framework.authtoken",
+    'ckeditor'
 
     # 'pagedown'
 
@@ -55,12 +57,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         'rest_framework.authentication.BasicAuthentication',
-#         'rest_framework.authentication.SessionAuthentication',
-#     ]
-# }
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',)
+}
 
 ROOT_URLCONF = 'email_webapp.urls'
 
@@ -128,9 +131,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
 MEDIA_URL = '/uploads/'
 MEDIA_ROOT = "uploads/"
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 

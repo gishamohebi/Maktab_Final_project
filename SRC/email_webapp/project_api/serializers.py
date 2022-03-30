@@ -5,11 +5,12 @@ from accounts.models import *
 
 class EmailsSerializer(serializers.HyperlinkedModelSerializer):
     sender = serializers.StringRelatedField(read_only=True, required=False)
+    receiver = serializers.StringRelatedField(many=True, read_only=True, required=False)
     url = serializers.HyperlinkedIdentityField(view_name="email_detail_api")
 
     class Meta:
         model = Emails
-        fields = ['url', 'id', 'title', 'text', 'sender', 'pub_date']
+        fields = ['url', 'id', 'title', 'text', 'sender', 'pub_date', 'receiver']
 
 
 class ContactsSerializer(serializers.HyperlinkedModelSerializer):
