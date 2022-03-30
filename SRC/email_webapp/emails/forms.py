@@ -1,7 +1,7 @@
+from ckeditor.widgets import CKEditorWidget
 from django import forms
 from .models import *
 from accounts.validators import *
-
 
 # from pagedown.widgets import PagedownWidget
 
@@ -11,7 +11,7 @@ class NewEmailForm(forms.Form):
     receiver_cc = forms.CharField(widget=forms.TextInput, required=False)
     receiver_bcc = forms.CharField(widget=forms.TextInput, required=False)
     title = forms.CharField(max_length=50, required=False)
-    text = forms.CharField(widget=forms.Textarea, required=False)
+    text = forms.CharField(widget = CKEditorWidget(), required=False)
 
     file = forms.FileField(
         validators=[file_size],

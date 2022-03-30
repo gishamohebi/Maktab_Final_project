@@ -1,3 +1,4 @@
+from ckeditor.fields import RichTextField
 from django.contrib.auth.base_user import AbstractBaseUser
 from .validators import *
 from accounts.models import *
@@ -82,9 +83,7 @@ class Emails(models.Model):
         blank=True,
         null=True
     )
-    text = models.TextField(
-        blank=True,
-        null=True
+    text = RichTextField(
     )
     file = models.FileField(
         upload_to='',
@@ -119,7 +118,7 @@ class Emails(models.Model):
 
     @property
     def get_file_size(self):
-        if self.file and hasattr(self.file , 'size'):
+        if self.file and hasattr(self.file, 'size'):
             return self.file.size
 
     def __str__(self):
@@ -140,7 +139,7 @@ class FilterInfo(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False, blank=False, related_name='filter_owner')
     username = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True,
                                  related_name='filter_username')
-    subject = models.CharField(max_length=50, blank=True, null=True)
+    subject = models.CharField(max_length=150, blank=True, null=True)
     label = models.CharField(max_length=100)
     filter_both = models.BooleanField(default=False)
 
@@ -151,5 +150,3 @@ class FilterEmailStatus(models.Model):
     is_filter = models.BooleanField(default=False)
     active_label = models.BooleanField(default=False)
     label = models.CharField(max_length=100, null=False, blank=True)
-
-
