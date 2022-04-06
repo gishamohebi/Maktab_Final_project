@@ -141,3 +141,19 @@ class UserViewsTest(TestCase):
         # Check when the user did not activate email of recovery return the correct message and url
         self.assertEqual("Email is not verified, please check your email inbox", message.message)
         self.assertRedirects(response, '/accounts/login/')
+
+    def test_view_register(self):
+        data = {
+            "username": "testuser5",
+            "password": "1XISRUkw+tuK",
+            "email_address": "alaki5@gmail.com",
+            "phone": '',
+            "first_name": "",
+            "last_name": "",
+            "birth_date": "",
+            "recovery": "Email"
+        }
+        response = self.client.post(reverse('register'), data, follow=True, )
+
+        message = list(response.context.get('messages'))[0]
+        self.assertEqual("We sent you an email to verify your account", message.message)

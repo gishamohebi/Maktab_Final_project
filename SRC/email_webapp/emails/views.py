@@ -292,15 +292,15 @@ class EmailDetail(LoginRequiredMixin, DetailView):
             return context
 
         # check if the email receiver is a to, cc or bcc type
-        url = self.request.META.get('HTTP_REFERER').split('/')
-
         receivers_to = list(context.get('email').receiver_to.filter().values_list('username', flat=True))
         receivers_cc = list(context.get('email').receiver_cc.filter().values_list('username', flat=True))
         receivers_bcc = list(context.get('email').receiver_bcc.filter().values_list('username', flat=True))
 
-        if "sent" in url:
-            context['people'] = list(context.get('email').receiver.filter().values_list('username', flat=True))
-            return context
+        if self.request.META.get('HTTP_REFERER'):
+            url = self.request.META.get('HTTP_REFERER').split('/')
+            if "sent" in url:
+                context['people'] = list(context.get('email').receiver.filter().values_list('username', flat=True))
+                return context
 
         if context['email'].is_to or context['email'].is_bcc is True:
             if self.request.user.username in receivers_bcc or \
@@ -390,14 +390,14 @@ def new_label(request):
         title = request.POST.get('title')
         owner = request.user.pk
         try:
-            new_cat = Category(owner_id=owner,
-                               title=title)
-            new_cat.save()
+            new_cat = Category.objects.create(owner_id=owner,
+                                              title=title)
+
             messages.add_message(request, messages.SUCCESS, "The label added successfully")
 
             return redirect(request.META.get('HTTP_REFERER'))
         except IntegrityError:
-            messages.add_message(request, messages.SUCCESS, "The label exist")
+            messages.add_message(request, messages.ERROR, "The label exist")
             return redirect(request.META.get('HTTP_REFERER'))
 
 
@@ -407,7 +407,7 @@ def delete_label(request):
         title = request.POST.get('title')
         owner = request.user.pk
         if title == "...":
-            messages.add_message(request, messages.SUCCESS, "Select a label title!")
+            messages.add_message(request, messages.ERROR, "Select a label title!")
             return redirect('inbox')
 
         cat = Category.objects.get(owner_id=owner, title=title)
@@ -462,7 +462,7 @@ def set_label(request, pk):
         title = request.POST.get("title")
         owner = request.user.pk
         if title == "...":
-            messages.add_message(request, messages.SUCCESS, "Select a label title!")
+            messages.add_message(request, messages.ERROR, "Select a label title!")
             return redirect(request.META.get('HTTP_REFERER'))
         cat = Category.objects.get(owner_id=owner, title=title)
         email.category.add(cat.pk)
@@ -477,7 +477,7 @@ def remove_from_label(request, pk):
         title = request.POST.get("title")
         owner = request.user.pk
         if title == "...":
-            messages.add_message(request, messages.SUCCESS, "Select a label title!")
+            messages.add_message(request, messages.ERROR, "Select a label title!")
             return redirect(request.META.get('HTTP_REFERER'))
         cat = Category.objects.get(owner_id=owner, title=title)
         email.category.remove(cat.pk)
@@ -564,7 +564,7 @@ def forward_email(request, pk):
                                               is_bcc=is_bcc,
                                               is_cc=is_cc,
                                               is_to=is_to,
-                                              signature_id=from_email.signature
+                                              signature_id=from_email.signature.id
                                               )
                 email.receiver.add(*users)
                 email.receiver_cc.add(*users_cc)
@@ -589,7 +589,7 @@ def forward_email(request, pk):
                                               text=from_email.text,
                                               file=from_email.file,
                                               status='draft',
-                                              signature_id=from_email.signature
+                                              signature_id=from_email.signature.id
                                               )
                 email.save()
                 place = EmailPlace.objects.create(user=sender, email=email)
@@ -773,7 +773,7 @@ def new_filter(request):
         if form.is_valid():
             filter_both = False
             if username is not None:
-                if form.cleaned_data['subject'] is not '':
+                if form.cleaned_data['subject'] != '':
                     filter_both = True
 
             new_filter = FilterInfo.objects.create(
