@@ -101,9 +101,11 @@ class UserViewsTest(TestCase):
         # Create  user
         test_user1 = User.objects.create_user(username='testuser1', password='1X<ISRUkw+tuK', phone='09191919191',
                                               recovery='Phone', active_phone=True)
-        test_user2 = User.objects.create_user(username='testuser2', password='2HJ1vRV0Z&3iD', email_address='alaki@gmail.com',
+        test_user2 = User.objects.create_user(username='testuser2', password='2HJ1vRV0Z&3iD',
+                                              email_address='alaki@gmail.com',
                                               recovery='Email', active_email=True)
-        test_user3 = User.objects.create_user(username='testuser3', password='2HJ1vRV0Z&3iD', email_address='alaki2@gmail.com',
+        test_user3 = User.objects.create_user(username='testuser3', password='2HJ1vRV0Z&3iD',
+                                              email_address='alaki2@gmail.com',
                                               recovery='Email', active_email=False)
         test_user1.save()
         test_user2.save()
