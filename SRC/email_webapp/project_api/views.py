@@ -63,7 +63,7 @@ class ListEmails(generics.ListCreateAPIView):
 
 class ListContacts(generics.ListCreateAPIView):
     serializer_class = ContactsSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TokenAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
