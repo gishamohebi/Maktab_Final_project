@@ -1,8 +1,6 @@
 import json
 import mimetypes
 import os
-import sys
-
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -369,14 +367,14 @@ class LabelEmailList(BaseList):
     def get_queryset(self):
         # the pk is the pk of the category
         pk = self.kwargs['pk']
-        emails = Emails.objects.filter(category__id=pk, receiver=self.request.user.pk)
+        emails = Emails.objects.filter(category__id=pk)
         filters = Emails.objects.filter(receiver=self.request.user.pk)
 
         for email in emails:
             place = EmailPlace.objects.filter(email=email.pk, user=self.request.user.pk)
             for item in place:
                 if item.is_trash is True or item.is_archive is True:
-                    status = FilterEmailStatus.objects.filter(email=email,filter_user=self.request.user)
+                    status = FilterEmailStatus.objects.filter(email=email, filter_user=self.request.user)
                     for stat in status:
                         if stat.active_label is True:
                             pass

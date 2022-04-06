@@ -1,5 +1,6 @@
 import csv
 import json
+import random
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -27,8 +28,6 @@ from emails.forms import *
 from emails.views import BaseList
 from emails.extera_handeler import creat_draft
 from .forms import *
-
-import random
 
 
 def home(request):
@@ -158,6 +157,9 @@ class ActivateEmail(View):
             user.active_email = True
             user.save()
             login(request, user)
+            default_categories = Category.objects.filter(owner__in=User.objects.filter(is_superuser=True))
+            for cat in default_categories:
+                Category.objects.create(owner=user, title=cat.title)
             messages.success(request, (f"Your account have been confirmed."
                                        f"Your username is {user.username}"))
             return redirect("login")
@@ -191,6 +193,9 @@ class ActivatePhone(View):
             user.set_password(registered["password"])
             user.save()
             code.delete()
+            default_categories = Category.objects.filter(owner__in=User.objects.filter(is_superuser=True))
+            for cat in default_categories:
+                Category.objects.create(owner=user, title=cat.title)
             messages.success(request, (f"Your account have been confirmed."
                                        f"Your username is {user.username}"))
             return redirect("login")
@@ -328,8 +333,7 @@ class UpdateContact(LoginRequiredMixin, UpdateView):
         context = super(UpdateContact, self).get_context_data(**kwargs)
         context['form1'] = NewEmailForm()
         context['form2'] = NewContact()
-        signatures = Signature.objects.filter(owner__id=self.request.user.pk)
-        context['signatures'] = signatures
+        context['signatures'] = Signature.objects.filter(owner__id=self.request.user.pk)
         return context
 
 

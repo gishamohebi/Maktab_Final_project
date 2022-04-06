@@ -1,15 +1,9 @@
 import json
-import os
-import sys
-
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Count, Q
 from django.db.models.functions import TruncMonth
-
-from .models import *
 from django.contrib import admin
 from emails.models import *
-from django.contrib.auth.admin import UserAdmin
 
 admin.site.register(Contacts)
 
@@ -34,7 +28,8 @@ class UserAdmin(admin.ModelAdmin):
 
     @staticmethod
     def used_storage(obj):
-        emails_with_files = Emails.objects.filter(sender=obj).exclude(file=None, file__isnull=False)
+        emails_with_files = Emails.objects.filter(Q(sender=obj) | Q(receiver=obj)).exclude(file=None,
+                                                                                           file__isnull=False)
         storage = sum(int(email.get_file_size) for email in emails_with_files if email.get_file_size)
         return storage
 
