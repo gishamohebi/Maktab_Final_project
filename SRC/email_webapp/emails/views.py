@@ -14,6 +14,9 @@ from .forms import *
 from accounts.forms import NewContact
 from accounts.models import *
 from .extera_handeler import *
+import logging
+
+logger = logging.getLogger('emails')
 
 
 def find_filter_emails(request, emails):
@@ -212,6 +215,7 @@ def new_email(request):
             # if there is not any valid registered user within inputs
             if len(users) == 0:
                 messages.add_message(request, messages.ERROR, f"There most be at least one valid username!")
+                logger.error(f"{sender.username} add at least one valid receiver")
                 return redirect(request.META.get('HTTP_REFERER'))
             # to check the valid inputs
             for user in users:
@@ -222,6 +226,7 @@ def new_email(request):
                 for receiver in receivers:
                     messages.add_message(request, messages.ERROR,
                                          f"user with {receiver} username dose not exist!")
+                    logger.error(f"user with {receiver} username dose not exist to send email!")
                     return redirect(request.META.get('HTTP_REFERER'))
 
             if form.is_valid():
@@ -345,10 +350,8 @@ def check_trash(request, pk):
         for place in places:
             if place.is_trash is False:
                 place.is_trash = True
-                print(place)
             elif place.is_trash is True:
                 place.is_trash = False
-                print(place)
             place.save(update_fields=['is_trash'])
 
         find_filter_labels = FilterEmailStatus.objects.filter(email=email.pk, label='trash')
@@ -398,6 +401,7 @@ def new_label(request):
             return redirect(request.META.get('HTTP_REFERER'))
         except IntegrityError:
             messages.add_message(request, messages.ERROR, "The label exist")
+            logger.error(f"{owner} tried to add {title} while it has it.")
             return redirect(request.META.get('HTTP_REFERER'))
 
 
@@ -543,6 +547,7 @@ def forward_email(request, pk):
 
             if len(users) == 0:
                 messages.add_message(request, messages.ERROR, f"There most be at least one valid username!")
+                logger.error(f"{sender.username} add at least one valid receiver")
                 return redirect(request.META.get('HTTP_REFERER'))
 
             for user in users:
@@ -634,6 +639,7 @@ def edit_draft(request, pk):
             # if there is not any valid registered user within inputs
             if len(users) == 0:
                 messages.add_message(request, messages.ERROR, f"There most be at least one valid username!")
+                logger.error(f"{sender.username} add at least one valid receiver")
                 return redirect(request.META.get('HTTP_REFERER'))
             # to check the valid inputs
             for user in users:

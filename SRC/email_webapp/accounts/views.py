@@ -20,7 +20,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.template.loader import render_to_string
-from django.views.generic import DetailView, UpdateView, ListView
+from django.views.generic import DetailView, UpdateView
 
 from .tokens import account_activation_token
 from utils import send_otp_code, send_recover_link
@@ -28,6 +28,9 @@ from emails.forms import *
 from emails.views import BaseList
 from emails.extera_handeler import creat_draft
 from .forms import *
+import logging
+
+logger = logging.getLogger('accounts')
 
 
 def home(request):
@@ -127,6 +130,7 @@ class Login(View):
                     messages.add_message(
                         request, messages.ERROR,
                         'Email is not verified, please check your email inbox')
+                    logger.error(f"User with username {username} did not verify email")
                     return redirect("login")
             login(request, user)
             return HttpResponseRedirect("/gmz-email/inbox/")
@@ -134,6 +138,7 @@ class Login(View):
         messages.add_message(
             request, messages.ERROR,
             'wrong username or password')
+        logger.error(f"Wrong info were entered username : {username} , password : {password}")
         return redirect("login")
 
 
@@ -237,12 +242,14 @@ class RecoverPassword(View):
                         message = "We sent your email recover link please check."
                     else:
                         message = "You didn't verify your email!"
+                        logger.error(f"user with username {username} did not verify email")
                 else:
                     send_recovery_link(request, user)
                     message = "We sent your phone the recover link please check."
         except ObjectDoesNotExist:
             message = "This username dose not exist."
-            messages.add_message(request, messages.INFO, message=message)
+            messages.add_message(request, messages.ERROR, message=message)
+            logger.error(f"Wrong username for recovering password : {username}")
             return redirect("recovery_link")
         messages.add_message(request, messages.INFO, message=message)
         return redirect("login")
