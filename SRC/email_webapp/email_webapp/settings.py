@@ -42,11 +42,50 @@ INSTALLED_APPS = [
     'rest_framework',
     "rest_framework.authtoken",
     'ckeditor'
-
     # 'pagedown'
 
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'emails_file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': 'mail.log',
+        },
+        'accounts_file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': 'accounts.log',
+        }
+    },
+    'loggers': {
+        'emails': {
+            'handlers': ['emails_file', 'console'],
+            'level': 'WARNING',
+            'propagate': False,
+            'exc_info': False
+        },
+        'accounts': {
+            'handlers': ['accounts_file'],
+            'level': 'WARNING',
+        },
+    }
+
+}
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
