@@ -77,8 +77,8 @@ class Register(View):
                     user.username += "@gmz.com"
                     validate_password(form.cleaned_data['password'], user)
                 except ValidationError as e:
-                    form.add_error('password', e)  # to be displayed with the field's errors
-                    return render(request, "users/register_form.html", {'form': form})
+                    messages.add_message(request, messages.ERROR, message=''.join(e))
+                    return redirect('register')
 
                 if form.email_address is not None:
                     form.save()
@@ -106,10 +106,12 @@ class Register(View):
                                          "We sent your phone a verify code,enter it please")
                     return redirect(f"/accounts/phone/activate/")
         except IntegrityError:
-            form.add_error('username', "This username exist")
-            return render(request, "users/register_form.html", {"form": form})
+            messages.add_message(request, messages.ERROR, message="This username exist")
+            return redirect('register')
+
         else:
-            return render(request, "users/register_form.html", {"form": form})
+            messages.add_message(request, messages.ERROR, message=form.errors)
+            return redirect('register')
 
 
 class Login(View):
@@ -313,17 +315,18 @@ def new_contact(request):
                 try:
                     user = User.objects.get(username=contact.email)
                 except ObjectDoesNotExist:
-                    form.add_error('email', "this email dose not exist in the site")
-                    return render(request, 'emails/new_error.html', {'form': form})
+                    messages.add_message(request, messages.ERROR, f"this email dose not exist in the site")
+                    return redirect(request.META.get('HTTP_REFERER'))
 
                 if user:
                     contact.save()
                     return redirect('contacts')
         except IntegrityError:
-            form.add_error('email', "You saved this contact once")
-            return render(request, 'emails/new_error.html', {'form': form})
+            messages.add_message(request, messages.ERROR, f"You saved this contact once")
+            return redirect(request.META.get('HTTP_REFERER'))
         else:
-            return render(request, 'emails/new_error.html', {'form': form})
+            messages.add_message(request, messages.ERROR, message=form.errors)
+            return redirect(request.META.get('HTTP_REFERER'))
 
 
 class UpdateContact(LoginRequiredMixin, UpdateView):
@@ -380,7 +383,8 @@ def email_contact(request, email):
                 place = EmailPlace.objects.create(user=receiver, email=email)
 
                 return redirect('sent')
-            return render(request, 'emails/new_error.html', {'form': form})
+            messages.add_message(request, messages.ERROR, message=form.errors)
+            return redirect(request.META.get('HTTP_REFERER'))
 
         if 'draft_submit' in request.POST:
             if form.is_valid() is False or form.is_valid() is True:

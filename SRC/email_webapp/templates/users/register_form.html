@@ -15,6 +15,7 @@
         <br>
         <div class="loginBox">
             <h2>Registering</h2>
+          {% include "comments/message_layout.html" %}
             <form action="" method="post">
                 {% csrf_token %}
                 <p>Username</p>
@@ -59,6 +60,7 @@
                         {% endfor %}
                     {% endfor %}
                 {% endif %}
+
             </form>
         </div>
     </center>
