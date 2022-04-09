@@ -11,7 +11,11 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 from pathlib import Path
+import environ
 
+# Initialise environment variables
+env = environ.Env()
+environ.Env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -65,11 +69,13 @@ LOGGING = {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
             'filename': 'mail.log',
+            'formatter': 'simple'
         },
         'accounts_file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
             'filename': 'accounts.log',
+            'formatter': 'simple'
         }
     },
     'loggers': {
@@ -77,7 +83,7 @@ LOGGING = {
             'handlers': ['emails_file', 'console'],
             'level': 'WARNING',
             'propagate': False,
-            'exc_info': False
+
         },
         'accounts': {
             'handlers': ['accounts_file'],
@@ -131,9 +137,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
 
-        'NAME': 'email_webapp_final',
-        'USER': 'postgres',
-        'PASSWORD': '3912',
+        'NAME':  env('DATABASE_NAME'),
+        'USER': env('DATABASE_USER'),
+        'PASSWORD': env('DATABASE_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -181,8 +187,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'gisha.mohebi@gmail.com'
-EMAIL_HOST_PASSWORD = 'yxqbdczacqvdruxw'
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
 AUTH_USER_MODEL = 'accounts.user'
 

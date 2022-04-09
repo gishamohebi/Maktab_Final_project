@@ -401,6 +401,7 @@ def new_label(request):
             return redirect(request.META.get('HTTP_REFERER'))
         except IntegrityError:
             messages.add_message(request, messages.ERROR, "The label exist")
+
             logger.error(f"{owner} tried to add {title} while it has it.")
             return redirect(request.META.get('HTTP_REFERER'))
 

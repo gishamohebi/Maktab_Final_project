@@ -19,11 +19,7 @@
     <center>
         <br>
 
-        {% if messages %}
-            {% for message in messages %}
-                <h5 class="info">{{ message }}</h5>
-            {% endfor %}
-        {% endif %}
+          {% include "comments/message_layout.html" %}
         <br>
         <div class="loginBox">
             <h2>Login</h2>

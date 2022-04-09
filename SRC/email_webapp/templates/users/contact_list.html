@@ -8,6 +8,7 @@
 {% endblock %}
 {% block body %}
     <center>
+        {% include "comments/message_layout.html" %}
         <div class="header">
             <h4>
                 Contacts
@@ -25,13 +26,13 @@
         <div class="list_div">
             <ol>
 
-                    {% for person in object_list %}
-                        <li class="">
-                            <a href="/accounts/contact-detail/{{ person.id }}">
-                                {{ person.name }} : {{ person.email }}
-                            </a>
-                        </li>
-                    {% endfor %}
+                {% for person in object_list %}
+                    <li class="">
+                        <a href="/accounts/contact-detail/{{ person.id }}">
+                            {{ person.name }} : {{ person.email }}
+                        </a>
+                    </li>
+                {% endfor %}
 
 
             </ol>
